@@ -126,6 +126,14 @@
     <ClCompile Include="SimpleShader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\Fall2016\Graphics\DX11Starter\Camera.h" />
+    <ClInclude Include="..\..\..\Fall2016\Graphics\DX11Starter\DXMathImpl.h" />
+    <ClInclude Include="..\..\..\Fall2016\Graphics\DX11Starter\GameEntity.h" />
+    <ClInclude Include="..\..\..\Fall2016\Graphics\DX11Starter\GameMath.h" />
+    <ClInclude Include="..\..\..\Fall2016\Graphics\DX11Starter\Lights.h" />
+    <ClInclude Include="..\..\..\Fall2016\Graphics\DX11Starter\Material.h" />
+    <ClInclude Include="..\..\..\Fall2016\Graphics\DX11Starter\Mesh.h" />
+    <ClInclude Include="..\..\..\Fall2016\Graphics\DX11Starter\Vertex.h" />
     <ClInclude Include="DXCore.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="SimpleShader.h" />

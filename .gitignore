@@ -250,3 +250,14 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+*.sdf
+*.VC
+*.vcxproj.filters
+*.vcxproj.user
+*.VC.opendb
+Debug/
+/Debug/
+BrickAuht/Debug/
+/.vs/
+.vs/
