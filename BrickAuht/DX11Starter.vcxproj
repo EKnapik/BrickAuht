@@ -126,16 +126,16 @@
     <ClCompile Include="SimpleShader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\Fall2016\Graphics\DX11Starter\Camera.h" />
-    <ClInclude Include="..\..\..\Fall2016\Graphics\DX11Starter\DXMathImpl.h" />
-    <ClInclude Include="..\..\..\Fall2016\Graphics\DX11Starter\GameEntity.h" />
-    <ClInclude Include="..\..\..\Fall2016\Graphics\DX11Starter\GameMath.h" />
-    <ClInclude Include="..\..\..\Fall2016\Graphics\DX11Starter\Lights.h" />
-    <ClInclude Include="..\..\..\Fall2016\Graphics\DX11Starter\Material.h" />
-    <ClInclude Include="..\..\..\Fall2016\Graphics\DX11Starter\Mesh.h" />
-    <ClInclude Include="..\..\..\Fall2016\Graphics\DX11Starter\Vertex.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="DXCore.h" />
+    <ClInclude Include="DXMathImpl.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="GameEntity.h" />
+    <ClInclude Include="GameMath.h" />
+    <ClInclude Include="Lights.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="MathFunctions.h" />
+    <ClInclude Include="Mesh.h" />
     <ClInclude Include="SimpleShader.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
