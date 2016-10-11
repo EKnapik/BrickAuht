@@ -1,8 +1,18 @@
 #pragma once
 
+#include <vector>
+#include "GameMath.h"
+#include <map>
+#include <string>
+
+#ifdef WITH_DX
 #include "DXCore.h"
 #include "SimpleShader.h"
-#include <DirectXMath.h>
+#endif // WITH_DX
+#include "GameEntity.h"
+#include "Camera.h"
+
+#include "Lights.h"
 
 class Game 
 	: public DXCore
@@ -25,27 +35,23 @@ public:
 	void OnMouseMove (WPARAM buttonState, int x, int y);
 	void OnMouseWheel(float wheelDelta,   int x, int y);
 private:
+	Camera* camera;
+	bool mouseDown = false;
 
 	// Initialization helper methods - feel free to customize, combine, etc.
 	void LoadShaders(); 
-	void CreateMatrices();
 	void CreateBasicGeometry();
 
-	// Buffers to hold actual geometry data
-	ID3D11Buffer* vertexBuffer;
-	ID3D11Buffer* indexBuffer;
+	std::vector<GameEntity*> entities;
 
-	// Wrappers for DirectX shaders to provide simplified functionality
-	SimpleVertexShader* vertexShader;
-	SimplePixelShader* pixelShader;
+	std::map<std::string, Mesh*> MeshDictionary;
 
-	// The matrices to go from model space to screen space
-	DirectX::XMFLOAT4X4 worldMatrix;
-	DirectX::XMFLOAT4X4 viewMatrix;
-	DirectX::XMFLOAT4X4 projectionMatrix;
+	Material* material;
 
 	// Keeps track of the old mouse position.  Useful for 
 	// determining how far the mouse moved in a single frame.
 	POINT prevMousePos;
+
+	DirectionalLight light;
 };
 
