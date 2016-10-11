@@ -14,11 +14,6 @@ public:
 	GameEntity(Mesh* mesh, Material* material);
 
 	///<summary>
-	/// Deletes the game entity and all relevant assets.
-	///</summary>
-	~GameEntity();
-
-	///<summary>
 	/// Sets the world Matrix to a new value
 	///</summary>
 	void SetWorld(MAT4X4* mat) { world = *mat; };
@@ -64,12 +59,21 @@ public:
 
 	void PrepareShader(MAT4X4* view, MAT4X4* projection, DirectionalLight* dLight);
 
+	void AddReference() { references++; }
+
+	void Release();
+
 	VEC3 GetPosition() { return position; };
 	VEC3 GetRotation() { return rotation; };
 	VEC3 GetScale() { return scale; };
 	Mesh* GetMesh() { return mesh; }
 	Material* GetMaterial() { return material; }
 private:
+	///<summary>
+	/// Deletes the game entity and all relevant assets.
+	///</summary>
+	~GameEntity();
+
 	///<summary>
 	/// The mesh for this object.
 	///</summary>
@@ -96,4 +100,6 @@ private:
 	VEC3 scale;
 
 	Material* material;
+
+	int references = 0;
 };

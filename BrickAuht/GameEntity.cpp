@@ -103,3 +103,12 @@ void GameEntity::PrepareShader(MAT4X4 * view, MAT4X4 * projection, DirectionalLi
 	material->GetVertexShader()->SetShader();
 	material->GetPixelShader()->SetShader();
 }
+
+void GameEntity::Release()
+{
+	references--;
+	if (references == 0)
+	{
+		delete this;
+	}
+}

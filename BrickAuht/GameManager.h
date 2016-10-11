@@ -3,8 +3,10 @@
 #include <vector>
 
 #include "GameMath.h"
-#include "GameEntity.h"
+#include "GameObject.h"
 
 class GameManager {
-	std::vector<GameEntity> GameObjects;
+	std::vector<GameObject> GameObjects;
+
+	void Update(float dt);
 };

@@ -40,7 +40,7 @@ Game::~Game()
 
 	for (int i = 0; i < entities.size(); i++)
 	{
-		delete entities.at(i);
+		entities.at(i)->Release();
 	}
 
 	typedef std::map<std::string, Mesh*>::iterator it_type;
@@ -150,7 +150,9 @@ void Game::CreateBasicGeometry()
 	MeshDictionary.insert(std::pair<std::string, Mesh*>("torus", torus));
 	torus->AddReference();
 
-	entities.push_back(new GameEntity(torus, material));
+	GameEntity* firstEntity = new GameEntity(torus, material);
+	entities.push_back(firstEntity);
+	firstEntity->AddReference();
 }
 
 
