@@ -14,6 +14,8 @@
 
 #include "Lights.h"
 
+#include "GameManager.h"
+
 class Game 
 	: public DXCore
 {
@@ -47,6 +49,8 @@ private:
 	std::map<std::string, Mesh*> MeshDictionary;
 
 	Material* material;
+
+	GameManager gameManager;
 
 	// Keeps track of the old mouse position.  Useful for 
 	// determining how far the mouse moved in a single frame.

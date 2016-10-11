@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "Vertex.h"
 #include "WICTextureLoader.h"
+#include "Ball.h"
 
 // For the DirectX Math library
 using namespace DirectX;
@@ -150,9 +151,20 @@ void Game::CreateBasicGeometry()
 	MeshDictionary.insert(std::pair<std::string, Mesh*>("torus", torus));
 	torus->AddReference();
 
-	GameEntity* firstEntity = new GameEntity(torus, material);
-	entities.push_back(firstEntity);
-	firstEntity->AddReference();
+	for (int i = 0; i < 10; i++)
+	{
+		GameEntity* firstEntity = new GameEntity(sphere, material);
+
+		Ball* ball = new Ball();
+		ball->SetEntity(firstEntity);
+		ball->kinematics->velocity = VEC3(0, 0, 0);
+		ball->kinematics->acceleration = VEC3(-2.5f + i * 0.5f, -(i + 1), -2.5f + i * 0.5f);
+		ball->kinematics->SetPosition(VEC3(-5 + i, 4, 0));
+		gameManager.AddObject(ball);
+	}
+
+	//entities.push_back(firstEntity);
+	//firstEntity->AddReference();
 }
 
 
@@ -184,6 +196,8 @@ void Game::Update(float deltaTime, float totalTime)
 		Quit();
 
 	camera->Update(deltaTime);
+
+	gameManager.Update(deltaTime);
 
 	if (entities.size() > 0 && GetAsyncKeyState(VK_LSHIFT) & 0x8000)
 	{
@@ -232,22 +246,22 @@ void Game::Draw(float deltaTime, float totalTime)
 		1.0f,
 		0);
 
-	for (int i = 0; i < entities.size(); i++)
+	for (int i = 0; i < gameManager.GameObjects.size(); i++)
 	{
 		// Prepare data will copy all buffer data, so as long as this comes before that we 
 		// are safe to set values in the shader.
-		entities.at(i)->GetMaterial()->GetPixelShader()->SetFloat3("cameraPosition",
+		gameManager.GameObjects.at(i)->entity->GetMaterial()->GetPixelShader()->SetFloat3("cameraPosition",
 			*camera->GetPosition());
-		entities.at(i)->PrepareShader(camera->GetView(), camera->GetProjection(), &light);
+		gameManager.GameObjects.at(i)->entity->PrepareShader(camera->GetView(), camera->GetProjection(), &light);
 
 		// Set buffers in the input assembler
 		//  - Do this ONCE PER OBJECT you're drawing, since each object might
 		//    have different geometry.
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
-		ID3D11Buffer* vBuffer = entities.at(i)->GetMesh()->GetVertexBuffer();
+		ID3D11Buffer* vBuffer = gameManager.GameObjects.at(i)->entity->GetMesh()->GetVertexBuffer();
 		context->IASetVertexBuffers(0, 1, &vBuffer, &stride, &offset);
-		context->IASetIndexBuffer(entities.at(i)->GetMesh()->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+		context->IASetIndexBuffer(gameManager.GameObjects.at(i)->entity->GetMesh()->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 
 		// Finally do the actual drawing
 		//  - Do this ONCE PER OBJECT you intend to draw
@@ -255,7 +269,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		//  - DrawIndexed() uses the currently set INDEX BUFFER to look up corresponding
 		//     vertices in the currently set VERTEX BUFFER
 		context->DrawIndexed(
-			entities.at(i)->GetMesh()->GetIndexCount(),     // The number of indices to use (we could draw a subset if we wanted)
+			gameManager.GameObjects.at(i)->entity->GetMesh()->GetIndexCount(),     // The number of indices to use (we could draw a subset if we wanted)
 			0,     // Offset to the first index we want to use
 			0);    // Offset to add to each index when looking up vertices
 	}

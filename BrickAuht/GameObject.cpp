@@ -1,37 +1,30 @@
 #include "GameObject.h"
 
-KinematicComponent::KinematicComponent(GameEntity * enitity)
+void GameObject::SetEntity(GameEntity* newEntity)
 {
-	this->entity = entity;
-	enitity->AddReference();
-}
-
-KinematicComponent::KinematicComponent()
-{
-}
-
-void KinematicComponent::Update(float dt)
-{
-	acceleration.x += velocity.x * dt;
-	acceleration.y += velocity.y * dt;
-	acceleration.z += velocity.z * dt;
-
-	if (entity != nullptr)
-	{
-		oldPosition = entity->GetPosition();
-		entity->SetPosition(VEC3(oldPosition.x + velocity.x * dt, oldPosition.y + velocity.y * dt, oldPosition.z + velocity.z * dt));
-	}
-	else 
-	{
-		oldPosition = position;
-		position = VEC3(oldPosition.x + velocity.x * dt, oldPosition.y + velocity.y * dt, oldPosition.z + velocity.z * dt);
-	}
-}
-
-KinematicComponent::~KinematicComponent()
-{
-	if (entity != nullptr)
+	if (entity)
 	{
 		entity->Release();
+	}
+
+	entity = newEntity;
+	newEntity->AddReference();
+}
+
+void GameObject::AddComponent(Component* component)
+{
+	components.push_back(component);
+}
+
+GameObject::~GameObject()
+{
+	if (entity)
+	{
+		entity->Release();
+	}
+
+	for (int i = 0; i < components.size(); i++)
+	{
+		delete components.at(i);
 	}
 }

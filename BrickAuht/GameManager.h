@@ -6,7 +6,12 @@
 #include "GameObject.h"
 
 class GameManager {
-	std::vector<GameObject> GameObjects;
+public:
+	std::vector<GameObject*> GameObjects;
 
 	void Update(float dt);
+
+	void AddObject(GameObject* object) { GameObjects.push_back(object); }
+
+	~GameManager();
 };
