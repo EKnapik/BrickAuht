@@ -8,4 +8,5 @@ public:
 	KinematicComponent* kinematics;
 	virtual void SetEntity(GameEntity* entity);
 	void Update(float dt);
+	FLOAT radius = 0.5f;
 };

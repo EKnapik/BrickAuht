@@ -61,21 +61,6 @@ namespace GMath
 		return DirectX::XMLoadFloat4x4(mat);
 	};
 
-	inline MATRIX Mult(MATRIX* mat, VEC3* vec)
-	{
-		return DirectX::XMMatrixMultiply(*mat, DirectX::XMMatrixTranslation(vec->x, vec->y, vec->z));
-	}
-
-	inline VECTOR VectorScale(VECTOR* vec, FLOAT scale)
-	{
-		return DirectX::XMVectorScale(*vec, scale);
-	}
-
-	inline MATRIX Mult(MAT4X4* mat, VEC3* vec)
-	{
-		DirectX::XMStoreFloat4x4(mat, Mult(&GetMatrix(mat), vec));
-	}
-
 	inline VECTOR GetVector(VEC2* vec)
 	{
 		return DirectX::XMLoadFloat2(vec);
@@ -90,6 +75,32 @@ namespace GMath
 	{
 		return DirectX::XMLoadFloat4(vec);
 	};
+
+
+	inline MATRIX Mult(MATRIX* mat, VEC3* vec)
+	{
+		return DirectX::XMMatrixMultiply(*mat, DirectX::XMMatrixTranslation(vec->x, vec->y, vec->z));
+	}
+
+	inline VECTOR VectorScale(VECTOR* vec, FLOAT scale)
+	{
+		return DirectX::XMVectorScale(*vec, scale);
+	}
+
+	inline void VectorScale(VEC3* vec, FLOAT scale)
+	{
+		DirectX::XMStoreFloat3(vec, DirectX::XMVectorScale(GetVector(vec), scale));
+	}
+
+	inline void VectorScale(VEC3* scaled, VEC3* original, FLOAT scale)
+	{
+		DirectX::XMStoreFloat3(scaled, DirectX::XMVectorScale(GetVector(original), scale));
+	}
+
+	inline MATRIX Mult(MAT4X4* mat, VEC3* vec)
+	{
+		DirectX::XMStoreFloat4x4(mat, Mult(&GetMatrix(mat), vec));
+	}
 
 	inline void SetVector3(VEC3* vec, FLOAT x, FLOAT y, FLOAT z)
 	{
@@ -185,5 +196,10 @@ namespace GMath
 			aspectRatio,		// Aspect ratio
 			nearClip,						// Near clip plane distance
 			farClip));					// Far clip plane distance); // Transpose for HLSL!
+	}
+
+	inline void GetMagnitude(FLOAT* length, VEC3* vec)
+	{
+		DirectX::XMStoreFloat(length, DirectX::XMVector3Length(GetVector(vec)));
 	}
 }

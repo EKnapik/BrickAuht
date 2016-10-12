@@ -53,5 +53,29 @@ void BouncingBallScene::Update()
 		{
 			balls.at(i)->kinematics->velocity.z = abs(balls.at(i)->kinematics->velocity.z);
 		}
+
+		for (int p = i + 1; p < balls.size(); p++)
+		{
+			VEC3 distanceVec;
+			GMath::AddVec3(&distanceVec, &balls.at(i)->kinematics->GetPosition(),
+				(GMath::VectorScale(&GMath::GetVector(&balls.at(p)->kinematics->GetPosition()), -1.0f)));
+
+			FLOAT distance;
+			GMath::GetMagnitude(&distance, &distanceVec);
+
+			if (distance < balls.at(i)->radius + balls.at(p)->radius)
+			{
+				GMath::Vec3Normalize(&GMath::GetVector(&distanceVec));
+				float velocityMag;
+				GMath::GetMagnitude(&velocityMag, &balls.at(i)->kinematics->velocity);
+				GMath::SetVector3(&balls.at(i)->kinematics->velocity, distanceVec.x, distanceVec.y, distanceVec.z);
+				GMath::VectorScale(&balls.at(i)->kinematics->velocity, velocityMag);
+
+				GMath::GetMagnitude(&velocityMag, &balls.at(p)->kinematics->velocity);
+				GMath::SetVector3(&balls.at(p)->kinematics->velocity, distanceVec.x, distanceVec.y, distanceVec.z);
+				GMath::VectorScale(&balls.at(p)->kinematics->velocity, -velocityMag);
+			}
+			
+		}
 	}
 }
