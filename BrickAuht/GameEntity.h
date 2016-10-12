@@ -55,10 +55,6 @@ public:
 
 	void SwapMesh(Mesh* newMesh);
 
-	void PrepareShader(MAT4X4* view, MAT4X4* projection);
-
-	void PrepareShader(MAT4X4* view, MAT4X4* projection, DirectionalLight* dLight);
-
 	void AddReference() { references++; }
 
 	void Release();

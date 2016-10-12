@@ -203,39 +203,7 @@ void Game::Update(float deltaTime, float totalTime)
 // --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
-	// Background color (Cornflower Blue in this case) for clearing
-	const float color[4] = {0.4f, 0.6f, 0.75f, 0.0f};
-
-	context->ClearRenderTargetView(backBufferRTV, color);
-	context->ClearDepthStencilView(
-		depthStencilView, 
-		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-		1.0f,
-		0);
-
-	for (int i = 0; i < gameManager.GameObjects->size(); i++)
-	{
-		// Prepare data will copy all buffer data, so as long as this comes before that we 
-		// are safe to set values in the shader.
-		gameManager.GameObjects->at(i)->entity->GetMaterial()->GetPixelShader()->SetFloat3("cameraPosition",
-			*camera->GetPosition());
-		gameManager.GameObjects->at(i)->entity->PrepareShader(camera->GetView(), camera->GetProjection(), &light);
-
-		UINT stride = sizeof(Vertex);
-		UINT offset = 0;
-		ID3D11Buffer* vBuffer = gameManager.GameObjects->at(i)->entity->GetMesh()->GetVertexBuffer();
-		context->IASetVertexBuffers(0, 1, &vBuffer, &stride, &offset);
-		context->IASetIndexBuffer(gameManager.GameObjects->at(i)->entity->GetMesh()->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-
-		// Finally do the actual drawing
-		context->DrawIndexed(
-			gameManager.GameObjects->at(i)->entity->GetMesh()->GetIndexCount(),     // The number of indices to use (we could draw a subset if we wanted)
-			0,     // Offset to the first index we want to use
-			0);    // Offset to add to each index when looking up vertices
-	}
-
-	//renderer->DrawOneMaterial(&gameManager.GameEntities, gameManager.GameEntities.size(), deltaTime, totalTime);
-
+	renderer->DrawOneMaterial(&gameManager.GameEntities, gameManager.GameEntities.size(), deltaTime, totalTime);
 	swapChain->Present(0, 0);
 }
 

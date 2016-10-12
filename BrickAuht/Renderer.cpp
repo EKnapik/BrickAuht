@@ -38,33 +38,46 @@ void Renderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, INT numEnt
 	pixelShader->SetShader();
 
 	// Send texture Info
-	pixelShader->SetSamplerState("Sampler", material->GetSamplerState());
-	pixelShader->SetShaderResourceView("Texture", material->GetSRV());
+	pixelShader->SetSamplerState("basicSampler", material->GetSamplerState());
+	pixelShader->SetShaderResourceView("diffuseTexture", material->GetSRV());
 	//pixelShader->SetShaderResourceView("NormalMap", material->GetNormMap());
 
 	// Send Lighting Info
-	struct DirectionalLight directionalLight = DirectionalLight();
-	directionalLight.AmbientColor = XMFLOAT4(.1, .1, .1, 1.0);
-	directionalLight.DiffuseColor = XMFLOAT4(.8, .8, .1, 1.0);
-	directionalLight.Direction = XMFLOAT3(1.0, -1.0, 0.0);
-	pixelShader->SetData("dirLight1", &directionalLight, sizeof(DirectionalLight));
+	DirectionalLight dLight;
+	dLight.AmbientColor = VEC4(0.1f, 0.1f, 0.1f, 0.0f);
+	dLight.DiffuseColor = VEC4(0, 0, 1, 0);
+	dLight.Direction = VEC3(1, -1, 0);
+	material->GetPixelShader()->SetData(
+		"light",
+		&dLight,
+		sizeof(DirectionalLight));
 
-	struct DirectionalLight directionalLight2 = DirectionalLight();
-	directionalLight2.AmbientColor = XMFLOAT4(.1, .1, .1, 1.0);
-	directionalLight2.DiffuseColor = XMFLOAT4(0, 1.0, .1, 1.0);
-	directionalLight2.Direction = XMFLOAT3(0.0, 1.0, 0.0);
-	pixelShader->SetData("dirLight2", &directionalLight2, sizeof(DirectionalLight));
+	// Create a ground light so every object is lit a little bit from the ground
+	DirectionalLight gLight;
+	gLight.AmbientColor = VEC4(0.1f, 0.1f, 0.1f, 1.0f);
+	gLight.DiffuseColor = VEC4(71.0f / 255.0f, 28.0f / 255.0f, 1.0f / 255.0f, 1.0f);
+	gLight.Direction = VEC3(0, 1, 0);
 
-	struct PointLight pointLight = PointLight();
-	pointLight.Color = XMFLOAT4(1.0, 0.0, 0.5, 1.0);
-	pointLight.Position = XMFLOAT3(3.0, 3.0, 3.0);
-	pixelShader->SetData("pointLight", &pointLight, sizeof(PointLight));
+	material->GetPixelShader()->SetData(
+		"groundLight",
+		&gLight,
+		sizeof(DirectionalLight));
+
+	PointLight pLight;
+	pLight.Color = VEC4(253.0f / 255.0f, 184.0f / 255.0f, 19.0f / 255.0f, 1.0f);
+	pLight.Position = VEC3(0, 0, -5);
+
+	HRESULT result = material->GetPixelShader()->SetData(
+		"pointLight",
+		&pLight,
+		sizeof(PointLight));
 
 	pixelShader->CopyAllBufferData();
 
 	// Send Geometry
 	vertexShader->SetMatrix4x4("view", *camera->GetView());
 	vertexShader->SetMatrix4x4("projection", *camera->GetProjection());
+	pixelShader->SetFloat3("cameraPosition", *camera->GetPosition());
 
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
