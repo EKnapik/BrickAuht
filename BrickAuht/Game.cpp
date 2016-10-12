@@ -1,7 +1,7 @@
 #include "Game.h"
 #include "Vertex.h"
 #include "WICTextureLoader.h"
-#include "Ball.h"
+#include "BouncingBallScene.h"
 
 // For the DirectX Math library
 using namespace DirectX;
@@ -137,20 +137,7 @@ void Game::CreateBasicGeometry()
 	MeshDictionary.insert(std::pair<std::string, Mesh*>("torus", torus));
 	torus->AddReference();
 
-	for (int i = 0; i < 10; i++)
-	{
-		GameEntity* firstEntity = new GameEntity(sphere, material);
-
-		Ball* ball = new Ball();
-		ball->SetEntity(firstEntity);
-		ball->kinematics->velocity = VEC3(0, 0, 0);
-		ball->kinematics->acceleration = VEC3(-2.5f + i * 0.5f, -(i + 1), -2.5f + i * 0.5f);
-		ball->kinematics->SetPosition(VEC3(-5 + i, 4, 0));
-		gameManager.AddObject(ball);
-	}
-
-	//entities.push_back(firstEntity);
-	//firstEntity->AddReference();
+	gameManager.SetActiveScene(new BouncingBallScene(sphere, material));
 }
 
 
@@ -249,6 +236,8 @@ void Game::Draw(float deltaTime, float totalTime)
 			0,     // Offset to the first index we want to use
 			0);    // Offset to add to each index when looking up vertices
 	}
+
+	//renderer->DrawOneMaterial(&gameManager.GameEntities, gameManager.GameEntities.size(), deltaTime, totalTime);
 
 	swapChain->Present(0, 0);
 }

@@ -17,7 +17,8 @@ Renderer::~Renderer()
 {
 }
 
-void Renderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, int numEntities, float deltaTime, float totalTime) {
+void Renderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, INT numEntities, FLOAT deltaTime, FLOAT totalTime)
+{
 	// Background color (Cornflower Blue)
 	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 

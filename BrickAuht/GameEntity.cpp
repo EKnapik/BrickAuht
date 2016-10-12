@@ -80,7 +80,7 @@ void GameEntity::PrepareShader(MAT4X4 * view, MAT4X4 * projection, DirectionalLi
 
 	PointLight pLight;
 	pLight.Color = VEC4(253.0f / 255.0f, 184.0f / 255.0f, 19.0f / 255.0f, 1.0f);
-	pLight.Position = VEC3(0, 5, 0);
+	pLight.Position = VEC3(0, 0, -5);
 
 	HRESULT result = material->GetPixelShader()->SetData(
 		"pointLight",
