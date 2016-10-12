@@ -63,6 +63,9 @@
     <ClCompile Include="BouncingBallScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BrickAuhtScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DXCore.h">
@@ -117,6 +120,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BouncingBallScene.h">
+      <Filter>Scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="BrickAuhtScene.h">
       <Filter>Scenes</Filter>
     </ClInclude>
   </ItemGroup>

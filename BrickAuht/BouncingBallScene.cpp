@@ -75,7 +75,6 @@ void BouncingBallScene::Update()
 				GMath::SetVector3(&balls.at(p)->kinematics->velocity, distanceVec.x, distanceVec.y, distanceVec.z);
 				GMath::VectorScale(&balls.at(p)->kinematics->velocity, -velocityMag);
 			}
-			
 		}
 	}
 }

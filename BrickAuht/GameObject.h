@@ -15,4 +15,6 @@ public:
 	void AddComponent(Component* component);
 
 	virtual ~GameObject();
+
+	bool ToDelete = false;
 };

@@ -122,6 +122,7 @@
   <ItemGroup>
     <ClCompile Include="Ball.cpp" />
     <ClCompile Include="BouncingBallScene.cpp" />
+    <ClCompile Include="BrickAuhtScene.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DXCore.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -138,6 +139,7 @@
   <ItemGroup>
     <ClInclude Include="Ball.h" />
     <ClInclude Include="BouncingBallScene.h" />
+    <ClInclude Include="BrickAuhtScene.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="DXCore.h" />
     <ClInclude Include="DXMathImpl.h" />

@@ -2,6 +2,7 @@
 #include "Vertex.h"
 #include "WICTextureLoader.h"
 #include "BouncingBallScene.h"
+#include "BrickAuhtScene.h"
 
 // For the DirectX Math library
 using namespace DirectX;
@@ -140,7 +141,7 @@ void Game::CreateBasicGeometry()
 	MeshDictionary.insert(std::pair<std::string, Mesh*>("torus", torus));
 	torus->AddReference();
 
-	gameManager.SetActiveScene(new BouncingBallScene(sphere, material));
+	gameManager.SetActiveScene(new BrickAuhtScene(sphere, material));
 }
 
 
@@ -175,31 +176,24 @@ void Game::Update(float deltaTime, float totalTime)
 
 	gameManager.Update(deltaTime);
 
-	if (entities.size() > 0 && GetAsyncKeyState(VK_LSHIFT) & 0x8000)
+	if (GetAsyncKeyState('R') & 0x8000)
+	{
+		gameManager.SetActiveScene(new BrickAuhtScene(MeshDictionary.at("sphere"), material));
+	}
+
+	if (GetAsyncKeyState(VK_LSHIFT) & 0x8000)
 	{
 		if (GetAsyncKeyState('1') & 0x8000)
 		{
-			entities.at(0)->SwapMesh(MeshDictionary.at("cone"));
+			gameManager.SetActiveScene(new BrickAuhtScene(MeshDictionary.at("sphere"), material));
 		}
 		else if (GetAsyncKeyState('2') & 0x8000)
 		{
-			entities.at(0)->SwapMesh(MeshDictionary.at("cube"));
+			gameManager.SetActiveScene(new BouncingBallScene(MeshDictionary.at("sphere"), material));
 		}
 		else if (GetAsyncKeyState('3') & 0x8000)
 		{
-			entities.at(0)->SwapMesh(MeshDictionary.at("cylinder"));
-		}
-		else if (GetAsyncKeyState('4') & 0x8000)
-		{
-			entities.at(0)->SwapMesh(MeshDictionary.at("helix"));
-		}
-		else if (GetAsyncKeyState('5') & 0x8000)
-		{
-			entities.at(0)->SwapMesh(MeshDictionary.at("sphere"));
-		}
-		else if (GetAsyncKeyState('6') & 0x8000)
-		{
-			entities.at(0)->SwapMesh(MeshDictionary.at("torus"));
+			gameManager.SetActiveScene(new BouncingBallScene(MeshDictionary.at("torus"), material));
 		}
 	}
 }
@@ -219,23 +213,23 @@ void Game::Draw(float deltaTime, float totalTime)
 		1.0f,
 		0);
 
-	for (int i = 0; i < gameManager.GameObjects.size(); i++)
+	for (int i = 0; i < gameManager.GameObjects->size(); i++)
 	{
 		// Prepare data will copy all buffer data, so as long as this comes before that we 
 		// are safe to set values in the shader.
-		gameManager.GameObjects.at(i)->entity->GetMaterial()->GetPixelShader()->SetFloat3("cameraPosition",
+		gameManager.GameObjects->at(i)->entity->GetMaterial()->GetPixelShader()->SetFloat3("cameraPosition",
 			*camera->GetPosition());
-		gameManager.GameObjects.at(i)->entity->PrepareShader(camera->GetView(), camera->GetProjection(), &light);
+		gameManager.GameObjects->at(i)->entity->PrepareShader(camera->GetView(), camera->GetProjection(), &light);
 
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
-		ID3D11Buffer* vBuffer = gameManager.GameObjects.at(i)->entity->GetMesh()->GetVertexBuffer();
+		ID3D11Buffer* vBuffer = gameManager.GameObjects->at(i)->entity->GetMesh()->GetVertexBuffer();
 		context->IASetVertexBuffers(0, 1, &vBuffer, &stride, &offset);
-		context->IASetIndexBuffer(gameManager.GameObjects.at(i)->entity->GetMesh()->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+		context->IASetIndexBuffer(gameManager.GameObjects->at(i)->entity->GetMesh()->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 
 		// Finally do the actual drawing
 		context->DrawIndexed(
-			gameManager.GameObjects.at(i)->entity->GetMesh()->GetIndexCount(),     // The number of indices to use (we could draw a subset if we wanted)
+			gameManager.GameObjects->at(i)->entity->GetMesh()->GetIndexCount(),     // The number of indices to use (we could draw a subset if we wanted)
 			0,     // Offset to the first index we want to use
 			0);    // Offset to add to each index when looking up vertices
 	}

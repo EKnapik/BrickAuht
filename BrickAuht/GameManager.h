@@ -8,14 +8,14 @@
 
 class GameManager {
 public:
-	std::vector<GameObject*> GameObjects;
+	std::vector<GameObject*>* GameObjects;
 	std::vector<GameEntity*> GameEntities;
 
 	void Update(float dt);
 
 	void SetActiveScene(Scene* nextScene);
 
-	void AddObject(GameObject* object) { GameObjects.push_back(object); }
+	void AddObject(GameObject* object) { GameObjects->push_back(object); }
 
 	~GameManager();
 
