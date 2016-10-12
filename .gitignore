@@ -252,6 +252,12 @@ paket-files/
 *.sln.iml
 
 *.sdf
+*.VC
+*.VC.opendb
 Debug/
 /Debug/
-BrickAuht/Debug/
+/.vs/
+.vs/
+
+
+
