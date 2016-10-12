@@ -47,11 +47,11 @@ void BrickAuhtScene::Initialize()
 void BrickAuhtScene::Update()
 {
 	float paddleSpeed = 3;
-	if (GetAsyncKeyState('J') & 0x8000)
+	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
 	{
 		paddle->kinematics->velocity = VEC3(-paddleSpeed, paddle->kinematics->velocity.y, 0);
 	}
-	else if (GetAsyncKeyState('L') & 0x8000)
+	else if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
 	{
 		paddle->kinematics->velocity = VEC3(paddleSpeed, paddle->kinematics->velocity.y, 0);
 	}
@@ -59,11 +59,11 @@ void BrickAuhtScene::Update()
 	{
 		paddle->kinematics->velocity = VEC3(0, paddle->kinematics->velocity.y, 0);
 	}
-	if (GetAsyncKeyState('I') & 0x8000)
+	if (GetAsyncKeyState(VK_UP) & 0x8000)
 	{
 		paddle->kinematics->velocity = VEC3(paddle->kinematics->velocity.x, paddleSpeed, 0);
 	}
-	else if (GetAsyncKeyState('K') & 0x8000)
+	else if (GetAsyncKeyState(VK_DOWN) & 0x8000)
 	{
 		paddle->kinematics->velocity = VEC3(paddle->kinematics->velocity.x, -paddleSpeed, 0);
 	}
