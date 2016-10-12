@@ -49,6 +49,7 @@ Game::~Game()
 		iterator->second->Release();
 	}
 
+	delete renderer;
 	delete camera;
 }
 
@@ -58,18 +59,17 @@ Game::~Game()
 // --------------------------------------------------------
 void Game::Init()
 {
-	// Helper methods for loading shaders, creating some basic
-	// geometry to draw and some simple camera matrices.
-	//  - You'll be expanding and/or replacing these later
 	LoadShaders();
 	CreateBasicGeometry();
 
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
-	// Essentially: "What kind of shape should the GPU draw with our data?"
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	camera = new Camera(width, height);
+
+	// TODO: Renderer should only take the context and then create the buffers it needs
+	renderer = new Renderer(camera, context, backBufferRTV, depthStencilView);
 
 	light.AmbientColor = VEC4(0.1f, 0.1f, 0.1f, 1.0f);
 	light.DiffuseColor = VEC4(0, 0, 1, 1);
@@ -81,9 +81,6 @@ void Game::Init()
 // --------------------------------------------------------
 // Loads shaders from compiled shader object (.cso) files using
 // my SimpleShader wrapper for DirectX shader manipulation.
-// - SimpleShader provides helpful methods for sending
-//   data to individual variables on the GPU
-// --------------------------------------------------------
 void Game::LoadShaders()
 {
 	SimpleVertexShader* vertexShader = new SimpleVertexShader(device, context);
@@ -109,17 +106,6 @@ void Game::LoadShaders()
 	device->CreateSamplerState(&sampleDesc, &samplerState);
 
 	material = new Material(vertexShader, pixelShader, SRV, samplerState);
-
-	// You'll notice that the code above attempts to load each
-	// compiled shader file (.cso) from two different relative paths.
-
-	// This is because the "working directory" (where relative paths begin)
-	// will be different during the following two scenarios:
-	//  - Debugging in VS: The "Project Directory" (where your .cpp files are) 
-	//  - Run .exe directly: The "Output Directory" (where the .exe & .cso files are)
-
-	// Checking both paths is the easiest way to ensure both 
-	// scenarios work correctly, although others exist
 }
 
 // --------------------------------------------------------
@@ -236,9 +222,6 @@ void Game::Draw(float deltaTime, float totalTime)
 	// Background color (Cornflower Blue in this case) for clearing
 	const float color[4] = {0.4f, 0.6f, 0.75f, 0.0f};
 
-	// Clear the render target and depth buffer (erases what's on the screen)
-	//  - Do this ONCE PER FRAME
-	//  - At the beginning of Draw (before drawing *anything*)
 	context->ClearRenderTargetView(backBufferRTV, color);
 	context->ClearDepthStencilView(
 		depthStencilView, 
@@ -254,9 +237,6 @@ void Game::Draw(float deltaTime, float totalTime)
 			*camera->GetPosition());
 		gameManager.GameObjects.at(i)->entity->PrepareShader(camera->GetView(), camera->GetProjection(), &light);
 
-		// Set buffers in the input assembler
-		//  - Do this ONCE PER OBJECT you're drawing, since each object might
-		//    have different geometry.
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
 		ID3D11Buffer* vBuffer = gameManager.GameObjects.at(i)->entity->GetMesh()->GetVertexBuffer();
@@ -264,19 +244,12 @@ void Game::Draw(float deltaTime, float totalTime)
 		context->IASetIndexBuffer(gameManager.GameObjects.at(i)->entity->GetMesh()->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 
 		// Finally do the actual drawing
-		//  - Do this ONCE PER OBJECT you intend to draw
-		//  - This will use all of the currently set DirectX "stuff" (shaders, buffers, etc)
-		//  - DrawIndexed() uses the currently set INDEX BUFFER to look up corresponding
-		//     vertices in the currently set VERTEX BUFFER
 		context->DrawIndexed(
 			gameManager.GameObjects.at(i)->entity->GetMesh()->GetIndexCount(),     // The number of indices to use (we could draw a subset if we wanted)
 			0,     // Offset to the first index we want to use
 			0);    // Offset to add to each index when looking up vertices
 	}
 
-	// Present the back buffer to the user
-	//  - Puts the final frame we're drawing into the window so the user can see it
-	//  - Do this exactly ONCE PER FRAME (always at the very end of the frame)
 	swapChain->Present(0, 0);
 }
 
@@ -284,9 +257,7 @@ void Game::Draw(float deltaTime, float totalTime)
 #pragma region Mouse Input
 
 // --------------------------------------------------------
-// Helper method for mouse clicking.  We get this information
-// from the OS-level messages anyway, so these helpers have
-// been created to provide basic mouse input if you want it.
+// Helper method for mouse clicking. 
 // --------------------------------------------------------
 void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 {
@@ -296,9 +267,6 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	prevMousePos.x = x;
 	prevMousePos.y = y;
 
-	// Caputure the mouse so we keep getting mouse move
-	// events even if the mouse leaves the window.  we'll be
-	// releasing the capture once a mouse button is released
 	SetCapture(hWnd);
 }
 
@@ -321,7 +289,6 @@ void Game::OnMouseUp(WPARAM buttonState, int x, int y)
 // --------------------------------------------------------
 void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 {
-	// Add any custom code here...
 	if (mouseDown)
 	{
 		FLOAT scalar = .005;
@@ -340,6 +307,6 @@ void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 // --------------------------------------------------------
 void Game::OnMouseWheel(float wheelDelta, int x, int y)
 {
-	// Add any custom code here...
+	// Add any code here...
 }
 #pragma endregion

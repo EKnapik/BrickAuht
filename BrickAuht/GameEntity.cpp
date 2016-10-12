@@ -52,18 +52,11 @@ void GameEntity::PrepareShader(MAT4X4 * view, MAT4X4* projection)
 void GameEntity::PrepareShader(MAT4X4 * view, MAT4X4 * projection, DirectionalLight * dLight)
 {
 	// Send data to shader variables
-	//  - Do this ONCE PER OBJECT you're drawing
-	//  - This is actually a complex process of copying data to a local buffer
-	//    and then copying that entire buffer to the GPU.  
-	//  - The "SimpleShader" class handles all of that for you.
 	material->GetVertexShader()->SetMatrix4x4("world", *GetWorld());
 	material->GetVertexShader()->SetMatrix4x4("view", *view);
 	material->GetVertexShader()->SetMatrix4x4("projection", *projection);
-
-	// Once you've set all of the data you care to change for
-	// the next draw call, you need to actually send it to the GPU
-	//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!
 	material->GetVertexShader()->CopyAllBufferData();
+
 
 	material->GetPixelShader()->SetSamplerState("basicSampler", material->GetSamplerState());
 	material->GetPixelShader()->SetShaderResourceView("diffuseTexture", material->GetSRV());
