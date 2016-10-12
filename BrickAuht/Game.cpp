@@ -49,6 +49,8 @@ Game::~Game()
 		iterator->second->Release();
 	}
 
+	material->Release();
+
 	delete renderer;
 	delete camera;
 }
@@ -106,6 +108,7 @@ void Game::LoadShaders()
 	device->CreateSamplerState(&sampleDesc, &samplerState);
 
 	material = new Material(vertexShader, pixelShader, SRV, samplerState);
+	material->AddReference();
 }
 
 // --------------------------------------------------------

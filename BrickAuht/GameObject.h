@@ -14,5 +14,5 @@ public:
 	virtual void SetEntity(GameEntity* newEntity);
 	void AddComponent(Component* component);
 
-	~GameObject();
+	virtual ~GameObject();
 };

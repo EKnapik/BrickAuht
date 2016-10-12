@@ -3,7 +3,6 @@
 
 class KinematicComponent : public Component {
 public:
-	KinematicComponent(GameEntity* enitity);
 	KinematicComponent();
 	void Update(float dt);
 	VEC3 GetPosition() { return entity != nullptr ? entity->GetPosition() : position; }

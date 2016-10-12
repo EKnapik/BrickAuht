@@ -1,11 +1,5 @@
 #include "KinematicsComponent.h"
 
-KinematicComponent::KinematicComponent(GameEntity * enitity)
-{
-	this->entity = entity;
-	enitity->AddReference();
-}
-
 KinematicComponent::KinematicComponent()
 {
 }
@@ -30,8 +24,5 @@ void KinematicComponent::Update(float dt)
 
 KinematicComponent::~KinematicComponent()
 {
-	if (entity != nullptr)
-	{
-		entity->Release();
-	}
+	
 }

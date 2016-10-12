@@ -16,7 +16,10 @@ void GameManager::Update(float dt)
 			GameEntities.push_back(GameObjects.at(i)->entity);
 		}
 	}
-	activeScene->Update();
+	if (activeScene)
+	{
+		activeScene->Update();
+	}
 }
 
 void GameManager::SetActiveScene(Scene * nextScene)
@@ -34,8 +37,8 @@ void GameManager::SetActiveScene(Scene * nextScene)
 
 GameManager::~GameManager()
 {
-	for (int i = 0; i < GameObjects.size(); i++)
+	if (activeScene)
 	{
-		delete GameObjects.at(i);
+		delete activeScene;
 	}
 }

@@ -7,5 +7,5 @@ public:
 	virtual void Update() {};
 	virtual void End() {};
 	std::vector<GameObject*> GameObjects;
-	~Scene(){ for (int i = 0; i < GameObjects.size(); i++) { delete GameObjects.at(i); } };
+	virtual ~Scene(){ for (int i = 0; i < GameObjects.size(); i++) { delete GameObjects.at(i); } };
 };
