@@ -253,8 +253,6 @@ paket-files/
 
 *.sdf
 *.VC
-*.vcxproj.filters
-*.vcxproj.user
 *.VC.opendb
 Debug/
 /Debug/
