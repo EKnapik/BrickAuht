@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <vector>
 #include "GameMath.h"
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tiny_obj_loader.h"
+
 
 using namespace GMath;
 Mesh::Mesh(Vertex * vertices, int numVertices, int * indices, int numIndices, ID3D11Device * device)
