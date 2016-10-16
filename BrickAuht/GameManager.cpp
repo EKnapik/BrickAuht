@@ -39,6 +39,7 @@ void GameManager::SetActiveScene(Scene * nextScene)
 	activeScene = nextScene;
 	activeScene->Initialize();
 	GameObjects = &activeScene->GameObjects;
+	GameEntities.clear();
 }
 
 GameManager::~GameManager()

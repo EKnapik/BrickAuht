@@ -117,11 +117,11 @@ void Game::LoadShaders()
 // --------------------------------------------------------
 void Game::CreateBasicGeometry()
 {
-	Mesh* cone = new Mesh("Assets/cone.obj", device);
+	Mesh* cone = new Mesh(std::string("Assets/cone.obj"), device);
 	MeshDictionary.insert(std::pair<std::string, Mesh*>("cone", cone));
 	cone->AddReference();
 
-	Mesh* cube = new Mesh("Assets/cube.obj", device);
+	Mesh* cube = new Mesh(std::string("Assets/cube.obj"), device);
 	MeshDictionary.insert(std::pair<std::string, Mesh*>("cube", cube));
 	cube->AddReference();
 
@@ -133,7 +133,7 @@ void Game::CreateBasicGeometry()
 	MeshDictionary.insert(std::pair<std::string, Mesh*>("helix", helix));
 	helix->AddReference();
 
-	Mesh* sphere = new Mesh("Assets/sphere.obj", device);
+	Mesh* sphere = new Mesh(std::string("Assets/sphere.obj"), device);
 	MeshDictionary.insert(std::pair<std::string, Mesh*>("sphere", sphere));
 	sphere->AddReference();
 

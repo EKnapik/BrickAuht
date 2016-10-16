@@ -2,7 +2,13 @@
 
 #include <d3d11.h>
 
+#include <string>
+#include <vector>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "Vertex.h"
+#include "GameMath.h"
 
 class Mesh {
 public:
@@ -16,11 +22,13 @@ public:
 	///<param name='device'>The DirectX object that this class will use to communicate with.</param>
 	Mesh(Vertex* vertices, int numVertices, int* indices, int numIndices, ID3D11Device* device);
 
+
 	///<summary>
 	/// This is the constructor for a Mesh object in this Graphics Engine. This constructor can take a .obj file.
 	///</summary>
 	///<param name='fileName'>The name of the file to load with .obj format</param>
-	Mesh(char* fileName, ID3D11Device* device);
+	Mesh(std::string fileName, ID3D11Device* device);
+
 
 	///<summary>
 	/// Gets the vertexBuffer object that was created for this mesh. Returns nullptr if creation failed

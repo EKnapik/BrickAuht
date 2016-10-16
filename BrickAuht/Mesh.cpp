@@ -1,9 +1,11 @@
 #include "Mesh.h"
-#include <stdio.h>
+
+#include <iostream>
 #include <fstream>
-#include <stdlib.h>
+
 #include <vector>
 #include "GameMath.h"
+
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 
@@ -14,152 +16,63 @@ Mesh::Mesh(Vertex * vertices, int numVertices, int * indices, int numIndices, ID
 	GenMesh(vertices, numVertices, indices, numIndices, device);
 }
 
-Mesh::Mesh(char * fileName, ID3D11Device * device)
+
+Mesh::Mesh(std::string fileName, ID3D11Device* device)
 {
-	// File input object
-	std::ifstream obj(fileName);
-
-	// Check for successful open
-	if (!obj.is_open())
-		return;
-
-	// Variables used while reading the file
-	std::vector<VEC3> positions;     // Positions from the file
-	std::vector<VEC3> normals;       // Normals from the file
-	std::vector<VEC2> uvs;           // UVs from the file
 	std::vector<Vertex> verts;           // Verts we're assembling
 	std::vector<UINT> indices;           // Indices of these verts
 	unsigned int vertCounter = 0;        // Count of vertices/indices
-	char chars[100];                     // String for line reading
 
-										 // Still good?
-	while (obj.good())
-	{
-		// Get the line (100 characters should be more than enough)
-		obj.getline(chars, 100);
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
 
-		// Check the type of line
-		if (chars[0] == 'v' && chars[1] == 'n')
-		{
-			// Read the 3 numbers directly into an XMFLOAT3
-			VEC3 norm;
-			sscanf_s(
-				chars,
-				"vn %f %f %f",
-				&norm.x, &norm.y, &norm.z);
+	std::string err;
+	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, fileName.c_str());
 
-			// Add to the list of normals
-			normals.push_back(norm);
-		}
-		else if (chars[0] == 'v' && chars[1] == 't')
-		{
-			// Read the 2 numbers directly into an XMFLOAT2
-			VEC2 uv;
-			sscanf_s(
-				chars,
-				"vt %f %f",
-				&uv.x, &uv.y);
-
-			// Add to the list of uv's
-			uvs.push_back(uv);
-		}
-		else if (chars[0] == 'v')
-		{
-			// Read the 3 numbers directly into an XMFLOAT3
-			VEC3 pos;
-			sscanf_s(
-				chars,
-				"v %f %f %f",
-				&pos.x, &pos.y, &pos.z);
-
-			// Add to the positions
-			positions.push_back(pos);
-		}
-		else if (chars[0] == 'f')
-		{
-			// Read the face indices into an array
-			unsigned int i[12];
-			int facesRead = sscanf_s(
-				chars,
-				"f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d",
-				&i[0], &i[1], &i[2],
-				&i[3], &i[4], &i[5],
-				&i[6], &i[7], &i[8],
-				&i[9], &i[10], &i[11]);
-
-			// - Create the verts by looking up
-			//    corresponding data from vectors
-			// - OBJ File indices are 1-based, so
-			//    they need to be adusted
-			Vertex v1;
-			v1.Position = positions[i[0] - 1];
-			v1.UV = uvs[i[1] - 1];
-			v1.Normal = normals[i[2] - 1];
-
-			Vertex v2;
-			v2.Position = positions[i[3] - 1];
-			v2.UV = uvs[i[4] - 1];
-			v2.Normal = normals[i[5] - 1];
-
-			Vertex v3;
-			v3.Position = positions[i[6] - 1];
-			v3.UV = uvs[i[7] - 1];
-			v3.Normal = normals[i[8] - 1];
-
-			// Flip the UV's since they're probably "upside down"
-			v1.UV.y = 1.0f - v1.UV.y;
-			v2.UV.y = 1.0f - v2.UV.y;
-			v3.UV.y = 1.0f - v3.UV.y;
-
-			// Add the verts to the vector
-			verts.push_back(v1);
-			verts.push_back(v2);
-			verts.push_back(v3);
-
-			// Add three more indices
-			indices.push_back(vertCounter); vertCounter += 1;
-			indices.push_back(vertCounter); vertCounter += 1;
-			indices.push_back(vertCounter); vertCounter += 1;
-
-			// Was there a 4th face?
-			if (facesRead == 12)
-			{
-				// Make the last vertex
-				Vertex v4;
-				v4.Position = positions[i[9] - 1];
-				v4.UV = uvs[i[10] - 1];
-				v4.Normal = normals[i[11] - 1];
-
-				// Flip the y
-				v4.UV.y = 1.0f - v4.UV.y;
-
-				// Add a whole triangle
-				verts.push_back(v1);
-				verts.push_back(v3);
-				verts.push_back(v4);
-
-				// Add three more indices
-				indices.push_back(vertCounter); vertCounter += 1;
-				indices.push_back(vertCounter); vertCounter += 1;
-				indices.push_back(vertCounter); vertCounter += 1;
-			}
-		}
+	if (!err.empty()) { // `err` may contain warning message.
+		std::cerr << err << std::endl;
 	}
 
-	// Close the file and create the actual buffers
-	obj.close();
+	if (!ret) {
+		exit(1);
+	}
 
-	// - At this point, "verts" is a vector of Vertex structs, and can be used
-	//    directly to create a vertex buffer:  &verts[0] is the address of the first vert
-	//
-	// - The vector "indices" is similar. It's a vector of unsigned ints and
-	//    can be used directly for the index buffer: &indices[0] is the address of the first int
-	//
-	// - "vertCounter" is BOTH the number of vertices and the number of indices
-	// - Yes, the indices are a bit redundant here (one per vertex)
+	// Loop over shapes
+	for (size_t s = 0; s < shapes.size(); s++) {
+		// Loop over faces(polygon)
+		size_t index_offset = 0;
+		for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
+			int fv = shapes[s].mesh.num_face_vertices[f];
+
+			// Loop over vertices in the face.
+			for (size_t v = 0; v < fv; v++) {
+				// access to vertex
+				tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+
+				Vertex vert;
+				vert.Position = VEC3(attrib.vertices[3 * idx.vertex_index + 0],
+								attrib.vertices[3 * idx.vertex_index + 1],
+								attrib.vertices[3 * idx.vertex_index + 2]);
+				vert.UV = VEC2(attrib.texcoords[2 * idx.texcoord_index + 0],
+							attrib.texcoords[2 * idx.texcoord_index + 1]);
+				vert.Normal = VEC3(attrib.normals[3 * idx.normal_index + 0],
+								attrib.normals[3 * idx.normal_index + 1],
+								attrib.normals[3 * idx.normal_index + 2]);
+				verts.push_back(vert);
+				// Add vert to indicies
+				indices.push_back(vertCounter); vertCounter += 1;
+			}
+			index_offset += fv;
+
+			// per-face material
+			shapes[s].mesh.material_ids[f];
+		}
+	}
 	GenMesh(&verts[0], vertCounter, (int*)(&indices[0]), vertCounter, device);
-
 }
+
+
 
 void Mesh::GenMesh(Vertex * vertices, int numVertices, int * indices, int numIndices, ID3D11Device * device)
 {
