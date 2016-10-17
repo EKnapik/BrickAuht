@@ -3,7 +3,6 @@
 
 BrickAuhtScene::BrickAuhtScene()
 {
-	for (int i = 0; i < 1; i++)
 	{
 		GameEntity* temp = new GameEntity("sphere", "electricity");
 
