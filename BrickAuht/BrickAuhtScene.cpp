@@ -1,11 +1,11 @@
 #include "BrickAuhtScene.h"
 #include "Ball.h"
 
-BrickAuhtScene::BrickAuhtScene(Mesh * shape, Material * mat)
+BrickAuhtScene::BrickAuhtScene()
 {
 	for (int i = 0; i < 1; i++)
 	{
-		GameEntity* temp = new GameEntity(shape, mat);
+		GameEntity* temp = new GameEntity("sphere", "electricity");
 
 		Ball* ball = new Ball();
 		ball->SetEntity(temp);
@@ -19,7 +19,7 @@ BrickAuhtScene::BrickAuhtScene(Mesh * shape, Material * mat)
 	{
 		for (int y = 0; y < 5; y++)
 		{
-			GameEntity* temp = new GameEntity(shape, mat);
+			GameEntity* temp = new GameEntity("cube", "default");
 
 			Ball* ball = new Ball();
 			ball->SetEntity(temp);
@@ -31,7 +31,7 @@ BrickAuhtScene::BrickAuhtScene(Mesh * shape, Material * mat)
 		}
 	}
 
-	GameEntity* temp = new GameEntity(shape, mat);
+	GameEntity* temp = new GameEntity("torus", "default");
 	paddle = new Ball();
 	paddle->SetEntity(temp);
 	paddle->kinematics->SetPosition(VEC3(0, 0, -4.5f));

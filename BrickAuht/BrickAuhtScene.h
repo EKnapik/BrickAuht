@@ -7,7 +7,7 @@
 
 class BrickAuhtScene : public Scene {
 public:
-	BrickAuhtScene(Mesh* shape, Material* mat);
+	BrickAuhtScene();
 	void Initialize();
 	void Update();
 	std::vector<Ball*> balls;

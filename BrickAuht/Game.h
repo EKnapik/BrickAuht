@@ -47,10 +47,6 @@ private:
 
 	std::vector<GameEntity*> entities;
 
-	std::map<std::string, Mesh*> MeshDictionary;
-
-	Material* material;
-
 	GameManager gameManager;
 	Renderer* renderer;
 

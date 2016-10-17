@@ -1,10 +1,10 @@
 #include "BouncingBallScene.h"
 
-BouncingBallScene::BouncingBallScene(Mesh * shape, Material * mat)
+BouncingBallScene::BouncingBallScene()
 {
 	for (int i = 0; i < 10; i++)
 	{
-		GameEntity* firstEntity = new GameEntity(shape, mat);
+		GameEntity* firstEntity = new GameEntity("sphere", "default");
 
 		Ball* ball = new Ball();
 		ball->SetEntity(firstEntity);

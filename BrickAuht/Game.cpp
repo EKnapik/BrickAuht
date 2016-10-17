@@ -40,18 +40,6 @@ Game::~Game()
 	// Release any (and all!) DirectX objects
 	// we've made in the Game class
 
-	for (int i = 0; i < entities.size(); i++)
-	{
-		entities.at(i)->Release();
-	}
-
-	typedef std::map<std::string, Mesh*>::iterator it_type;
-	for (it_type iterator = MeshDictionary.begin(); iterator != MeshDictionary.end(); iterator++) {
-		iterator->second->Release();
-	}
-
-	material->Release();
-
 	delete renderer;
 	delete camera;
 }
@@ -62,17 +50,16 @@ Game::~Game()
 // --------------------------------------------------------
 void Game::Init()
 {
+	camera = new Camera(width, height);
+	// TODO: Renderer should only take the context and then create the buffers it needs
+	renderer = new Renderer(camera, context, backBufferRTV, depthStencilView, device);
+
 	LoadShaders();
 	CreateBasicGeometry();
 
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	camera = new Camera(width, height);
-
-	// TODO: Renderer should only take the context and then create the buffers it needs
-	renderer = new Renderer(camera, context, backBufferRTV, depthStencilView);
 
 	light.AmbientColor = VEC4(0.1f, 0.1f, 0.1f, 1.0f);
 	light.DiffuseColor = VEC4(0, 0, 1, 1);
@@ -86,30 +73,11 @@ void Game::Init()
 // my SimpleShader wrapper for DirectX shader manipulation.
 void Game::LoadShaders()
 {
-	SimpleVertexShader* vertexShader = new SimpleVertexShader(device, context);
-	if (!vertexShader->LoadShaderFile(L"Debug/VertexShader.cso"))
-		vertexShader->LoadShaderFile(L"VertexShader.cso");		
+	renderer->AddVertexShader("default", L"VertexShader.cso");
+	renderer->AddPixelShader("default", L"PixelShader.cso");
 
-	SimplePixelShader* pixelShader = new SimplePixelShader(device, context);
-	if(!pixelShader->LoadShaderFile(L"Debug/PixelShader.cso"))	
-		pixelShader->LoadShaderFile(L"PixelShader.cso");
-
-	//Lets load two textures now as well
-	ID3D11ShaderResourceView* SRV;
-	CreateWICTextureFromFile(device, context, L"Assets/Textures/MetalPlate.png", 0, &SRV);
-
-	ID3D11SamplerState* samplerState;
-	D3D11_SAMPLER_DESC sampleDesc = {};
-	sampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampleDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	sampleDesc.MaxLOD = D3D11_FLOAT32_MAX;
-
-	device->CreateSamplerState(&sampleDesc, &samplerState);
-
-	material = new Material(vertexShader, pixelShader, SRV, samplerState);
-	material->AddReference();
+	renderer->AddMaterial("default", L"Assets/Textures/MetalPlate.png");
+	renderer->AddMaterial("electricity", L"Assets/Textures/Electricity.png");
 }
 
 // --------------------------------------------------------
@@ -117,31 +85,15 @@ void Game::LoadShaders()
 // --------------------------------------------------------
 void Game::CreateBasicGeometry()
 {
-	Mesh* cone = new Mesh(std::string("Assets/cone.obj"), device);
-	MeshDictionary.insert(std::pair<std::string, Mesh*>("cone", cone));
-	cone->AddReference();
+	renderer->AddMesh("cone", "Assets/cone.obj");
+	renderer->AddMesh("cube", "Assets/cube.obj");
+	renderer->AddMesh("cylinder", "Assets/cylinder.obj");
+	renderer->AddMesh("helix", "Assets/helix.obj");
+	renderer->AddMesh("sphere", "Assets/sphere.obj");
+	renderer->AddMesh("torus", "Assets/torus.obj");
+	//renderer->AddMesh("paddle", "Assets/paddle.obj");
 
-	Mesh* cube = new Mesh(std::string("Assets/cube.obj"), device);
-	MeshDictionary.insert(std::pair<std::string, Mesh*>("cube", cube));
-	cube->AddReference();
-
-	Mesh* cylinder = new Mesh("Assets/cylinder.obj", device);
-	MeshDictionary.insert(std::pair<std::string, Mesh*>("cylinder", cylinder));
-	cylinder->AddReference();
-
-	Mesh* helix = new Mesh("Assets/helix.obj", device);
-	MeshDictionary.insert(std::pair<std::string, Mesh*>("helix", helix));
-	helix->AddReference();
-
-	Mesh* sphere = new Mesh(std::string("Assets/sphere.obj"), device);
-	MeshDictionary.insert(std::pair<std::string, Mesh*>("sphere", sphere));
-	sphere->AddReference();
-
-	Mesh* torus = new Mesh("Assets/torus.obj", device);
-	MeshDictionary.insert(std::pair<std::string, Mesh*>("torus", torus));
-	torus->AddReference();
-
-	gameManager.SetActiveScene(new BrickAuhtScene(sphere, material));
+	gameManager.SetActiveScene(new BrickAuhtScene());
 }
 
 
@@ -178,22 +130,22 @@ void Game::Update(float deltaTime, float totalTime)
 
 	if (GetAsyncKeyState('R') & 0x8000)
 	{
-		gameManager.SetActiveScene(new BrickAuhtScene(MeshDictionary.at("sphere"), material));
+		gameManager.SetActiveScene(new BrickAuhtScene());
 	}
 
 	if (GetAsyncKeyState(VK_LSHIFT) & 0x8000)
 	{
 		if (GetAsyncKeyState('1') & 0x8000)
 		{
-			gameManager.SetActiveScene(new BrickAuhtScene(MeshDictionary.at("sphere"), material));
+			gameManager.SetActiveScene(new BrickAuhtScene());
 		}
 		else if (GetAsyncKeyState('2') & 0x8000)
 		{
-			gameManager.SetActiveScene(new BouncingBallScene(MeshDictionary.at("sphere"), material));
+			gameManager.SetActiveScene(new BouncingBallScene());
 		}
 		else if (GetAsyncKeyState('3') & 0x8000)
 		{
-			gameManager.SetActiveScene(new BouncingBallScene(MeshDictionary.at("torus"), material));
+			gameManager.SetActiveScene(new BouncingBallScene());
 		}
 	}
 }
@@ -203,7 +155,8 @@ void Game::Update(float deltaTime, float totalTime)
 // --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
-	renderer->DrawOneMaterial(&gameManager.GameEntities, gameManager.GameEntities.size(), deltaTime, totalTime);
+	//renderer->DrawOneMaterial(&gameManager.GameEntities,  deltaTime, totalTime);
+	renderer->DrawMultipleMaterials(&gameManager.GameEntities, deltaTime, totalTime);
 	swapChain->Present(0, 0);
 }
 

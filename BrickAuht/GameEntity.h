@@ -11,7 +11,7 @@ public:
 	///<summary>
 	/// Creates a game entity with the desired mesh.
 	///</summary>
-	GameEntity(Mesh* mesh, Material* material);
+	GameEntity(std::string mesh, std::string material);
 
 	///<summary>
 	/// Sets the world Matrix to a new value
@@ -53,7 +53,11 @@ public:
 	///</summary>
 	void SetScale(VEC3 vec) { scale = vec; };
 
-	void SwapMesh(Mesh* newMesh);
+	void SetMesh(std::string mesh) { this->mesh = mesh; }
+	std::string GetMesh() { return mesh; }
+
+	void SetMaterial(std::string material) { this->material = material; }
+	std::string GetMaterial() { return material; }
 
 	void AddReference() { references++; }
 
@@ -62,8 +66,9 @@ public:
 	VEC3 GetPosition() { return position; };
 	VEC3 GetRotation() { return rotation; };
 	VEC3 GetScale() { return scale; };
-	Mesh* GetMesh() { return mesh; }
-	Material* GetMaterial() { return material; }
+
+	std::string pixelShader = "default";
+	std::string vertexShader = "default";
 private:
 	///<summary>
 	/// Deletes the game entity and all relevant assets.
@@ -71,9 +76,16 @@ private:
 	~GameEntity();
 
 	///<summary>
-	/// The mesh for this object.
+	/// The mesh for this object. Represented as a string. The renderer will 
+	/// assign the proper mesh.
 	///</summary>
-	Mesh* mesh;
+	std::string mesh = "cube";
+
+	///<summary>
+	/// The material for this object. Represented as a string. The renderer will 
+	/// assign the proper mesh.
+	///</summary>
+	std::string material = "default";
 
 	///<summary>
 	/// The world matrix of the object. Calculated at the end of the frame.
@@ -94,8 +106,6 @@ private:
 	/// The scale vector for this object.
 	///</summary>
 	VEC3 scale;
-
-	Material* material;
 
 	int references = 0;
 };
