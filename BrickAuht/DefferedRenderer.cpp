@@ -160,6 +160,8 @@ DefferedRenderer::DefferedRenderer(Camera *camera, ID3D11DeviceContext *context,
 
 
 	// Create The Shaders
+	AddVertexShader("gBuffer", L"gBufferVertexShader.cso");
+	AddPixelShader("gBuffer", L"gBufferPixelShader.cso");
 }
 
 
@@ -180,13 +182,34 @@ DefferedRenderer::~DefferedRenderer()
 }
 
 
-void DefferedRenderer::Render()
+void DefferedRenderer::Render(std::vector<GameEntity*>* gameEntitys, FLOAT deltaTime, FLOAT totalTime)
 {
 	// TODO: Resolve depth stencil clearing
+	// Background color (Cornflower Blue)
+	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+
+	context->ClearRenderTargetView(backBufferRTV, color);
+
+	std::vector<GameEntity*> solidEntities;
+	std::vector<GameEntity*> lightEntities;
+	for (int i = 0; i < gameEntitys->size(); i++)
+	{
+		if (gameEntitys->at(i)->GetMaterial() == "light")
+		{
+			lightEntities.push_back(gameEntitys->at(i));
+		}
+		else {
+			solidEntities.push_back(gameEntitys->at(i));
+		}
+	}
+
+	// TODO: Create a two new vectors one for renderable game entities and one for lights
+	gBufferRender(&solidEntities);
+	lightRender(&lightEntities);
 }
 
 
-void DefferedRenderer::gBufferRender()
+void DefferedRenderer::gBufferRender(std::vector<GameEntity*>* gameEntitys)
 {
 	// A clear color of black
 	float clearColor[4] = {0.0, 0.0, 0.0, 1.0};
@@ -207,11 +230,47 @@ void DefferedRenderer::gBufferRender()
 	context->OMSetRenderTargets(3, RTViews, depthStencilView);
 
 	// RENDER NORMALLY NOW
+	DrawOneMaterial(gameEntitys);
 }
 
 
 
-void DefferedRenderer::lightRender()
+void DefferedRenderer::lightRender(std::vector<GameEntity*>* gameEntitys)
 {
+
+}
+
+void DefferedRenderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys)
+{
+	SimpleVertexShader* vertexShader = GetVertexShader("gBuffer");
+	SimplePixelShader* pixelShader = GetPixelShader("gBuffer");
+
+	if (gameEntitys->size() == 0) return;
+	Material* material = GetMaterial(gameEntitys->at(0)->GetMaterial());
+
+	// Send texture Info
+	pixelShader->SetSamplerState("basicSampler", material->GetSamplerState());
+	pixelShader->SetShaderResourceView("diffuseTexture", material->GetSRV());
+	//pixelShader->SetShaderResourceView("NormalMap", material->GetNormMap());
+	pixelShader->CopyAllBufferData();
+
+	// Send Geometry
+	vertexShader->SetMatrix4x4("view", *camera->GetView());
+	vertexShader->SetMatrix4x4("projection", *camera->GetProjection());
+	//pixelShader->SetFloat3("cameraPosition", *camera->GetPosition());  NOT CURRENTLY USED
+
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	Mesh* meshTmp;
+	for (int i = 0; i < gameEntitys->size(); i++) {
+		vertexShader->SetMatrix4x4("world", *gameEntitys->at(i)->GetWorld());
+		vertexShader->CopyAllBufferData();
+
+		meshTmp = GetMesh(gameEntitys->at(i)->GetMesh());
+		ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
+		context->IASetVertexBuffers(0, 1, &vertTemp, &stride, &offset);
+		context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+		context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
+	}
 
 }

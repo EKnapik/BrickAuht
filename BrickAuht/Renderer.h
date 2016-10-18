@@ -15,9 +15,9 @@ public:
 	Renderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* device, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView);
 	~Renderer();
 
-	virtual void Render() {};
+	virtual void Render(std::vector<GameEntity*>* gameEntitys, FLOAT deltaTime, FLOAT totalTime) {};
 
-	void DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, FLOAT deltaTime, FLOAT totalTime);
+	virtual void DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, FLOAT deltaTime, FLOAT totalTime);
 
 	void DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, FLOAT deltaTime, FLOAT totalTime);
 
