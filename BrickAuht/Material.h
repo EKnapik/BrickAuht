@@ -11,6 +11,8 @@ public:
 
 	void Release();
 
+	bool transparency = false;
+
 	ID3D11ShaderResourceView* GetSRV() { return SRV; };
 	ID3D11SamplerState* GetSamplerState() { return SamplerState; }
 private:

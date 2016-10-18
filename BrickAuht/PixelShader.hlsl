@@ -76,13 +76,14 @@ float4 main(VertexToPixel input) : SV_TARGET
 	// Lets include the textures now!
 	//float4 surfaceColor = 1;
 	float4 surfaceColor = diffuseTexture.Sample(basicSampler, input.uv);
+	clip(surfaceColor.a - 0.1f);
 
 	// Just return the input color
 	// - This color (like most values passing through the rasterizer) is 
 	//   interpolated for each pixel between the corresponding vertices 
 	//   of the triangle we're rendering
-	return	(groundLight.DiffuseColor * dirGroundLightAmount * surfaceColor) +
-			(light.DiffuseColor * dirLightAmount * surfaceColor) +
-			(pointLight.Color * pointLightAmount * surfaceColor) +
-			spec;
+	return	float4(((groundLight.DiffuseColor.xyz * dirGroundLightAmount * surfaceColor.xyz) +
+			(light.DiffuseColor.xyz * dirLightAmount * surfaceColor.xyz) +
+			(pointLight.Color.xyz * pointLightAmount * surfaceColor.xyz) +
+			spec), surfaceColor.a);
 }

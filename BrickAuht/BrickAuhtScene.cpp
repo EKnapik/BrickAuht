@@ -18,7 +18,7 @@ BrickAuhtScene::BrickAuhtScene()
 	{
 		for (int y = 0; y < 5; y++)
 		{
-			GameEntity* temp = new GameEntity("cube", "default");
+			GameEntity* temp = new GameEntity("cube", "gridclip");
 
 			Ball* ball = new Ball();
 			ball->SetEntity(temp);
@@ -30,7 +30,7 @@ BrickAuhtScene::BrickAuhtScene()
 		}
 	}
 
-	GameEntity* temp = new GameEntity("torus", "default");
+	GameEntity* temp = new GameEntity("torus", "greenopaque");
 	paddle = new Ball();
 	paddle->SetEntity(temp);
 	paddle->kinematics->SetPosition(VEC3(0, 0, -4.5f));
