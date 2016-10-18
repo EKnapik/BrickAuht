@@ -79,6 +79,7 @@ void Game::LoadShaders()
 	renderer->AddMaterial("default", L"Assets/Textures/MetalPlate.png");
 	renderer->AddMaterial("electricity", L"Assets/Textures/Electricity.png");
 	renderer->AddMaterial("greenopaque", L"Assets/Textures/GreenOpaque.png");
+	renderer->GetMaterial("greenopaque")->transparency = true;
 	renderer->AddMaterial("gridclip", L"Assets/Textures/GridClip.png");
 }
 

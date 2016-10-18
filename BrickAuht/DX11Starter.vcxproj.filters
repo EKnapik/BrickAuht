@@ -84,6 +84,9 @@
     <ClCompile Include="BrickAuhtScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DefferedRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BouncingBallScene.h">
@@ -145,6 +148,9 @@
     </ClInclude>
     <ClInclude Include="Ball.h">
       <Filter>Header Files\Engine\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="DefferedRenderer.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

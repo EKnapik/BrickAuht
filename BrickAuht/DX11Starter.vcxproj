@@ -124,6 +124,7 @@
     <ClCompile Include="BouncingBallScene.cpp" />
     <ClCompile Include="BrickAuhtScene.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="DefferedRenderer.cpp" />
     <ClCompile Include="DXCore.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameEntity.cpp" />
@@ -141,6 +142,7 @@
     <ClInclude Include="BouncingBallScene.h" />
     <ClInclude Include="BrickAuhtScene.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="DefferedRenderer.h" />
     <ClInclude Include="DXCore.h" />
     <ClInclude Include="DXMathImpl.h" />
     <ClInclude Include="Game.h" />

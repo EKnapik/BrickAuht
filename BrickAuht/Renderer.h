@@ -24,6 +24,9 @@ public:
 	void AddMesh(std::string name, Mesh* mesh);
 	void AddMesh(std::string name, std::string path);
 
+	Mesh* GetMesh(std::string name);
+	Material* GetMaterial(std::string name);
+
 	void AddMaterial(std::string name, Material* material);
 	void AddMaterial(std::string name, std::wstring path, D3D11_SAMPLER_DESC* sampleDesc);
 	///<summary>
@@ -46,9 +49,7 @@ private:
 	std::map<std::string, Material*>			MaterialDictionary;
 	std::map<std::string, SimpleVertexShader*>	VertexShaderDictionary;
 	std::map<std::string, SimplePixelShader*>	PixelShaderDictionary;
-
-	Mesh* GetMesh(std::string name);
-	Material* GetMaterial(std::string name);
+	
 	SimpleVertexShader* GetVertexShader(std::string name);
 	SimplePixelShader* GetPixelShader(std::string name);
 };
