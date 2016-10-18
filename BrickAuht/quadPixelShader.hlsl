@@ -18,7 +18,7 @@ struct VertexToPixel
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	return gNormal.Sample(basicSampler, input.uv);
+	return gAlbedo.Sample(basicSampler, input.uv);
 
 	return float4(0, 0, 0, 0);
 }

@@ -198,11 +198,20 @@ DefferedRenderer::~DefferedRenderer()
 
 void DefferedRenderer::Render(std::vector<GameEntity*>* gameEntitys, FLOAT deltaTime, FLOAT totalTime)
 {
-	// TODO: Resolve depth stencil clearing
 	// Background color (Cornflower Blue)
-	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+	const float clearColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 
-	context->ClearRenderTargetView(backBufferRTV, color);
+	context->ClearRenderTargetView(backBufferRTV, clearColor);
+	// clear all the render targets
+	context->ClearRenderTargetView(AlbedoRTV, clearColor);
+	context->ClearRenderTargetView(NormalRTV, clearColor);
+	context->ClearRenderTargetView(DepthRTV, clearColor);
+
+	context->ClearDepthStencilView(
+		depthStencilView,
+		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
+		1.0f,
+		0);
 
 	std::vector<GameEntity*> solidEntities;
 	std::vector<GameEntity*> lightEntities;
@@ -217,7 +226,6 @@ void DefferedRenderer::Render(std::vector<GameEntity*>* gameEntitys, FLOAT delta
 		}
 	}
 
-	// TODO: Create a two new vectors one for renderable game entities and one for lights
 	gBufferRender(&solidEntities);
 	lightRender(&lightEntities);
 }
@@ -225,21 +233,7 @@ void DefferedRenderer::Render(std::vector<GameEntity*>* gameEntitys, FLOAT delta
 
 void DefferedRenderer::gBufferRender(std::vector<GameEntity*>* gameEntitys)
 {
-	// A clear color of black
-	float clearColor[4] = {0.0, 0.0, 0.0, 1.0};
-
 	ID3D11RenderTargetView* RTViews[3] = { AlbedoRTV, NormalRTV, DepthRTV };
-	// clear all the render targets
-	context->ClearRenderTargetView(AlbedoRTV, clearColor);
-	context->ClearRenderTargetView(NormalRTV, clearColor);
-	context->ClearRenderTargetView(DepthRTV, clearColor);
-
-	// TODO: The depth stencil might be potentially pulled to a higer function
-	context->ClearDepthStencilView(
-		depthStencilView,
-		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-		1.0f,
-		0);
 
 	context->OMSetRenderTargets(3, RTViews, depthStencilView);
 
@@ -275,6 +269,21 @@ void DefferedRenderer::lightRender(std::vector<GameEntity*>* gameEntitys)
 	context->IASetVertexBuffers(0, 1, &vertTemp, &stride, &offset);
 	context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 	context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
+	return;
+
+	// TODO: Send lights that sample the position data in the buffer. To render properly
+	// Change gDepth to be gPosition and then I can render the sphere of influence sampling the pixel values and calculating
+	// I need to pass in the light pos, intensity, color that can be achieved with game entity values
+	for (int i = 0; i < gameEntitys->size(); i++) {
+		vertexShader->SetMatrix4x4("world", *gameEntitys->at(i)->GetWorld());
+		vertexShader->CopyAllBufferData();
+
+		meshTmp = GetMesh(gameEntitys->at(i)->GetMesh());
+		ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
+		context->IASetVertexBuffers(0, 1, &vertTemp, &stride, &offset);
+		context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+		context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
+	}
 }
 
 void DefferedRenderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys)

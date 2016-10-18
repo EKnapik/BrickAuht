@@ -53,7 +53,7 @@ void Game::Init()
 {
 	camera = new Camera(width, height);
 	// TODO: Renderer should only take the context and then create the buffers it needs
-	renderer = new DefferedRenderer(camera, context, device, backBufferRTV, depthStencilView, width, height);
+	renderer = new Renderer(camera, context, device, backBufferRTV, depthStencilView);
 
 	LoadShaders();
 	CreateBasicGeometry();
@@ -159,8 +159,9 @@ void Game::Update(float deltaTime, float totalTime)
 // --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
+	//renderer->Render(&gameManager.GameEntities, deltaTime, totalTime);
 	//renderer->DrawOneMaterial(&gameManager.GameEntities,  deltaTime, totalTime);
-	renderer->Render(&gameManager.GameEntities, deltaTime, totalTime);
+	renderer->DrawMultipleMaterials(&gameManager.GameEntities, deltaTime, totalTime);
 	swapChain->Present(0, 0);
 }
 
