@@ -3,7 +3,6 @@
 #include <iostream>
 #include <fstream>
 
-#include <vector>
 #include "GameMath.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
