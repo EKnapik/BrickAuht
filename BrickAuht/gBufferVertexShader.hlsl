@@ -13,7 +13,6 @@ struct VertexShaderInput
 	float3 position		: POSITION;     // XYZ position
 	float3 normal		: NORMAL;
 	float2 uv			: TEXCOORD;
-	float3 tangent		: TANGENT;
 };
 
 // Struct representing the data we're sending down the pipeline
@@ -48,8 +47,8 @@ VertexToPixel main( VertexShaderInput input )
 	// transform normal
 	output.normal = mul(input.normal, (float3x3)world);
 	output.normal = normalize(output.normal);
-	output.tangent = mul(input.tangent, (float3x3)world);
-	output.tangent = normalize(output.tangent);
+	//output.tangent = mul(input.tangent, (float3x3)world);
+	//output.tangent = normalize(output.tangent);
 
 	output.uv = input.uv;
 	// Set the depth (TODO find out what this does...https://github.com/oks2024/DeferredRendering/blob/master/DeferredRendering/RenderGBufferVertexShader.hlsl)

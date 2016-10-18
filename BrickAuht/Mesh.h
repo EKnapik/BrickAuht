@@ -29,6 +29,10 @@ public:
 	///<param name='fileName'>The name of the file to load with .obj format</param>
 	Mesh(std::string fileName, ID3D11Device* device);
 
+	///<summary>
+	/// Creates a basic quad mesh for whole screen rendering
+	///</summary>
+	Mesh(ID3D11Device* device);
 
 	///<summary>
 	/// Gets the vertexBuffer object that was created for this mesh. Returns nullptr if creation failed

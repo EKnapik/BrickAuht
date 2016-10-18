@@ -16,6 +16,7 @@ private:
 	void gBufferRender(std::vector<GameEntity*>* gameEntitys);
 	void lightRender(std::vector<GameEntity*>* gameEntitys);
 	void DrawOneMaterial(std::vector<GameEntity*>* gameEntitys);
+	void DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys);
 
 	// Albedo
 	ID3D11RenderTargetView *	AlbedoRTV;
@@ -28,5 +29,7 @@ private:
 	// Depth
 	ID3D11RenderTargetView *	DepthRTV;
 	ID3D11ShaderResourceView*	DepthSRV;
+
+	ID3D11SamplerState* simpleSampler;
 };
 

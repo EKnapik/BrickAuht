@@ -72,10 +72,43 @@ Mesh::Mesh(std::string fileName, ID3D11Device* device)
 }
 
 
+Mesh::Mesh(ID3D11Device* device)
+{
+	std::vector<Vertex> verts;           // Verts we're assembling
+	std::vector<UINT> indices;           // Indices of these verts
+	
+	Vertex curVert;
+	curVert.Normal = VEC3(0, 0, 0);
+
+	curVert.Position = VEC3(1.0f, -1.0f, 0.0f);
+	curVert.UV = VEC2(1.0f, 1.0f);
+	verts.push_back(curVert);
+	
+	curVert.Position = VEC3(-1.0f, -1.0f, 0.0f);
+	curVert.UV = VEC2(0.0f, 1.0f);
+	verts.push_back(curVert);
+	
+	curVert.Position = VEC3(-1.0f, 1.0f, 0.0f);
+	curVert.UV = VEC2(0.0f, 0.0f);
+	verts.push_back(curVert);
+	
+	curVert.Position = VEC3(1.0f, 1.0f, 0.0f);
+	curVert.UV = VEC2(1.0f, 0.0f);
+	verts.push_back(curVert);
+
+	indices.push_back(0);
+	indices.push_back(1);
+	indices.push_back(2);
+	indices.push_back(2);
+	indices.push_back(3);
+	indices.push_back(0);
+
+	GenMesh(&verts[0], verts.size(), (int*)(&indices[0]), indices.size(), device);
+}
+
 
 void Mesh::GenMesh(Vertex * vertices, int numVertices, int * indices, int numIndices, ID3D11Device * device)
 {
-
 	// Create the VERTEX BUFFER description -----------------------------------
 	// - The description is created on the stack because we only need
 	//    it to create the buffer.  The description is then useless.

@@ -158,10 +158,23 @@ DefferedRenderer::DefferedRenderer(Camera *camera, ID3D11DeviceContext *context,
 	// Don't need the actual depth texture
 	DepthTexture->Release();
 
+	// create sampler
+	D3D11_SAMPLER_DESC sampleDesc = {};
+	sampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampleDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampleDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	device->CreateSamplerState(&sampleDesc, &simpleSampler);
 
+	// Add required quad mesh
+	AddMesh("quad", new Mesh(device));
 	// Create The Shaders
 	AddVertexShader("gBuffer", L"gBufferVertexShader.cso");
 	AddPixelShader("gBuffer", L"gBufferPixelShader.cso");
+
+	AddVertexShader("quad", L"quadVertexShader.cso");
+	AddPixelShader("quad", L"quadPixelShader.cso");
 }
 
 
@@ -179,6 +192,7 @@ DefferedRenderer::~DefferedRenderer()
 	DepthRTV->Release();
 	DepthSRV->Release();
 
+	simpleSampler->Release();
 }
 
 
@@ -237,13 +251,38 @@ void DefferedRenderer::gBufferRender(std::vector<GameEntity*>* gameEntitys)
 
 void DefferedRenderer::lightRender(std::vector<GameEntity*>* gameEntitys)
 {
+	context->OMSetRenderTargets(1, &backBufferRTV, 0);
+	SimpleVertexShader* vertexShader = GetVertexShader("quad");
+	SimplePixelShader* pixelShader = GetPixelShader("quad");
+	vertexShader->SetShader();
+	pixelShader->SetShader();
 
+	// Send G buffers to pixel shader
+	pixelShader->SetSamplerState("basicSampler", simpleSampler);
+	pixelShader->SetShaderResourceView("gAlbedo", AlbedoSRV);
+	pixelShader->SetShaderResourceView("gNormal", NormalSRV);
+	pixelShader->SetShaderResourceView("gDepth", DepthSRV);
+	pixelShader->CopyAllBufferData();
+
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	Mesh* meshTmp;
+
+	vertexShader->CopyAllBufferData();
+
+	meshTmp = GetMesh("quad");
+	ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
+	context->IASetVertexBuffers(0, 1, &vertTemp, &stride, &offset);
+	context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
 }
 
 void DefferedRenderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys)
 {
 	SimpleVertexShader* vertexShader = GetVertexShader("gBuffer");
 	SimplePixelShader* pixelShader = GetPixelShader("gBuffer");
+	vertexShader->SetShader();
+	pixelShader->SetShader();
 
 	if (gameEntitys->size() == 0) return;
 	Material* material = GetMaterial(gameEntitys->at(0)->GetMaterial());
@@ -273,4 +312,75 @@ void DefferedRenderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys)
 		context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
 	}
 
+}
+
+
+void DefferedRenderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys)
+{
+	SimpleVertexShader* vertexShader = GetVertexShader("gBuffer");
+	SimplePixelShader* pixelShader = GetPixelShader("gBuffer");
+
+	if (gameEntitys->size() == 0) return;
+
+	for (int i = 0; i < gameEntitys->size(); i++) {
+		Material* material = GetMaterial(gameEntitys->at(i)->GetMaterial());
+		//SimpleVertexShader* vertexShader = GetVertexShader(gameEntitys->at(i)->vertexShader);
+		//SimplePixelShader* pixelShader = GetPixelShader(gameEntitys->at(i)->pixelShader);
+		vertexShader->SetShader();
+		pixelShader->SetShader();
+
+		// Send texture Info
+		pixelShader->SetSamplerState("basicSampler", material->GetSamplerState());
+		pixelShader->SetShaderResourceView("diffuseTexture", material->GetSRV());
+		//pixelShader->SetShaderResourceView("NormalMap", material->GetNormMap());
+
+		// Send Lighting Info
+		DirectionalLight dLight;
+		dLight.AmbientColor = VEC4(0.1f, 0.1f, 0.1f, 0.0f);
+		dLight.DiffuseColor = VEC4(0, 0, 1, 0);
+		dLight.Direction = VEC3(1, -1, 0);
+		pixelShader->SetData(
+			"light",
+			&dLight,
+			sizeof(DirectionalLight));
+
+		// Create a ground light so every object is lit a little bit from the ground
+		DirectionalLight gLight;
+		gLight.AmbientColor = VEC4(0.1f, 0.1f, 0.1f, 1.0f);
+		gLight.DiffuseColor = VEC4(71.0f / 255.0f, 28.0f / 255.0f, 1.0f / 255.0f, 1.0f);
+		gLight.Direction = VEC3(0, 1, 0);
+
+		pixelShader->SetData(
+			"groundLight",
+			&gLight,
+			sizeof(DirectionalLight));
+
+		PointLight pLight;
+		pLight.Color = VEC4(253.0f / 255.0f, 184.0f / 255.0f, 19.0f / 255.0f, 1.0f);
+		pLight.Position = VEC3(0, 0, -5);
+
+		pixelShader->SetData(
+			"pointLight",
+			&pLight,
+			sizeof(PointLight));
+
+		pixelShader->CopyAllBufferData();
+
+		// Send Geometry
+		vertexShader->SetMatrix4x4("view", *camera->GetView());
+		vertexShader->SetMatrix4x4("projection", *camera->GetProjection());
+		pixelShader->SetFloat3("cameraPosition", *camera->GetPosition());
+
+		UINT stride = sizeof(Vertex);
+		UINT offset = 0;
+		Mesh* meshTmp;
+		vertexShader->SetMatrix4x4("world", *gameEntitys->at(i)->GetWorld());
+		vertexShader->CopyAllBufferData();
+
+		meshTmp = GetMesh(gameEntitys->at(i)->GetMesh());
+		ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
+		context->IASetVertexBuffers(0, 1, &vertTemp, &stride, &offset);
+		context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+		context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
+	}
 }
