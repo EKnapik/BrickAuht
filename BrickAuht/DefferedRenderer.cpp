@@ -2,7 +2,8 @@
 
 
 
-DefferedRenderer::DefferedRenderer(ID3D11DeviceContext *context, ID3D11Device* device, int width, int height)
+DefferedRenderer::DefferedRenderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* device, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView, int width, int height) :
+	Renderer(camera, context, device, backBufferRTV, depthStencilView)
 {
 	HRESULT hr = S_OK;
 
@@ -34,7 +35,7 @@ DefferedRenderer::DefferedRenderer(ID3D11DeviceContext *context, ID3D11Device* d
 	albedoRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 	albedoRTVDesc.Texture2D.MipSlice = 0;
 
-	hr = device->CreateRenderTargetView(AlbedoTexture, &albedoRTVDesc, &AlbedoRenderTargetView);
+	hr = device->CreateRenderTargetView(AlbedoTexture, &albedoRTVDesc, &AlbedoRTV);
 
 	if (FAILED(hr))
 		printf("Error creating albedo RT.\n");
@@ -47,7 +48,7 @@ DefferedRenderer::DefferedRenderer(ID3D11DeviceContext *context, ID3D11Device* d
 	albedoSRVDesc.Texture2D.MostDetailedMip = 0;
 	albedoSRVDesc.Texture2D.MipLevels = 1;
 
-	hr = device->CreateShaderResourceView(AlbedoTexture, &albedoSRVDesc, &AlbedoShaderRV);
+	hr = device->CreateShaderResourceView(AlbedoTexture, &albedoSRVDesc, &AlbedoSRV);
 
 	if (FAILED(hr))
 		printf("Error creating albedo SRV.\n");
@@ -87,7 +88,7 @@ DefferedRenderer::DefferedRenderer(ID3D11DeviceContext *context, ID3D11Device* d
 	normalRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 	normalRTVDesc.Texture2D.MipSlice = 0;
 
-	hr = device->CreateRenderTargetView(NormalTexture, &normalRTVDesc, &NormalRenderTargetView);
+	hr = device->CreateRenderTargetView(NormalTexture, &normalRTVDesc, &NormalRTV);
 
 	if (FAILED(hr))
 		printf("Error creating normal RT.\n");
@@ -100,7 +101,7 @@ DefferedRenderer::DefferedRenderer(ID3D11DeviceContext *context, ID3D11Device* d
 	normalSRVDesc.Texture2D.MostDetailedMip = 0;
 	normalSRVDesc.Texture2D.MipLevels = 1;
 
-	hr = device->CreateShaderResourceView(NormalTexture, &normalSRVDesc, &NormalShaderRV);
+	hr = device->CreateShaderResourceView(NormalTexture, &normalSRVDesc, &NormalSRV);
 
 	if (FAILED(hr))
 		printf("Error creating normal SRV.\n");
@@ -139,7 +140,7 @@ DefferedRenderer::DefferedRenderer(ID3D11DeviceContext *context, ID3D11Device* d
 	depthRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 	depthRTVDesc.Texture2D.MipSlice = 0;
 
-	hr = device->CreateRenderTargetView(DepthTexture, &depthRTVDesc, &DepthRenderTargetView);
+	hr = device->CreateRenderTargetView(DepthTexture, &depthRTVDesc, &DepthRTV);
 
 	if (FAILED(hr))
 		printf("Error creating depth RT.\n");
@@ -152,7 +153,7 @@ DefferedRenderer::DefferedRenderer(ID3D11DeviceContext *context, ID3D11Device* d
 	depthSRVDesc.Texture2D.MostDetailedMip = 0;
 	depthSRVDesc.Texture2D.MipLevels = 1;
 
-	hr = device->CreateShaderResourceView(DepthTexture, &depthSRVDesc, &DepthShaderRV);
+	hr = device->CreateShaderResourceView(DepthTexture, &depthSRVDesc, &DepthSRV);
 
 	// Don't need the actual depth texture
 	DepthTexture->Release();
@@ -165,18 +166,52 @@ DefferedRenderer::DefferedRenderer(ID3D11DeviceContext *context, ID3D11Device* d
 DefferedRenderer::~DefferedRenderer()
 {
 	// Albedo
-	AlbedoRenderTargetView->Release();
-	AlbedoShaderRV->Release();
+	AlbedoRTV->Release();
+	AlbedoSRV->Release();
 
 	// Normal
-	NormalRenderTargetView->Release();
-	NormalShaderRV->Release();
+	NormalRTV->Release();
+	NormalSRV->Release();
 
 	// Depth
-	DepthRenderTargetView->Release();
-	DepthShaderRV->Release();
+	DepthRTV->Release();
+	DepthSRV->Release();
 
-	// Shaders
-	delete vertexShader;
-	delete pixelShader;
+}
+
+
+void DefferedRenderer::Render()
+{
+	// TODO: Resolve depth stencil clearing
+}
+
+
+void DefferedRenderer::gBufferRender()
+{
+	// A clear color of black
+	float clearColor[4] = {0.0, 0.0, 0.0, 1.0};
+
+	ID3D11RenderTargetView* RTViews[3] = { AlbedoRTV, NormalRTV, DepthRTV };
+	// clear all the render targets
+	context->ClearRenderTargetView(AlbedoRTV, clearColor);
+	context->ClearRenderTargetView(NormalRTV, clearColor);
+	context->ClearRenderTargetView(DepthRTV, clearColor);
+
+	// TODO: The depth stencil might be potentially pulled to a higer function
+	context->ClearDepthStencilView(
+		depthStencilView,
+		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
+		1.0f,
+		0);
+
+	context->OMSetRenderTargets(3, RTViews, depthStencilView);
+
+	// RENDER NORMALLY NOW
+}
+
+
+
+void DefferedRenderer::lightRender()
+{
+
 }

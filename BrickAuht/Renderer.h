@@ -12,10 +12,10 @@
 class Renderer
 {
 public:
-	Renderer(Camera *camera, ID3D11DeviceContext *context,
-		ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView,
-		ID3D11Device* device);
+	Renderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* device, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView);
 	~Renderer();
+
+	virtual void Render() {};
 
 	void DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, FLOAT deltaTime, FLOAT totalTime);
 
@@ -37,7 +37,7 @@ public:
 	void AddVertexShader(std::string name, std::wstring path);
 	void AddPixelShader(std::string name, std::wstring path);
 
-private:
+protected:
 	Camera *camera;
 
 	ID3D11Device*			device;

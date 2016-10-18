@@ -1,35 +1,32 @@
 #pragma once
 
-#include <DirectXMath.h>
-#include "SimpleShader.h"
-#include "DXMathImpl.h"
-#include "GameEntity.h"
-#include "Camera.h"
-#include "Lights.h"
+#include "Renderer.h"
 
-class DefferedRenderer
+class DefferedRenderer : public Renderer
 {
 public:
-	DefferedRenderer(ID3D11DeviceContext *context, ID3D11Device* device, int width, int height);
+	DefferedRenderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* device,
+		ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView, int width, int height);
 	~DefferedRenderer();
 	void Render();
+	
 
 private:
 
-	SimpleVertexShader* vertexShader;
-	SimplePixelShader* pixelShader;
+	void gBufferRender();
+	void lightRender();
 
 	// Albedo
-	ID3D11RenderTargetView *	AlbedoRenderTargetView;
-	ID3D11ShaderResourceView*	AlbedoShaderRV;
+	ID3D11RenderTargetView *	AlbedoRTV;
+	ID3D11ShaderResourceView*	AlbedoSRV;
 
 	// Normal
-	ID3D11RenderTargetView *	NormalRenderTargetView;
-	ID3D11ShaderResourceView*	NormalShaderRV;
+	ID3D11RenderTargetView *	NormalRTV;
+	ID3D11ShaderResourceView*	NormalSRV;
 
 	// Depth
-	ID3D11RenderTargetView *	DepthRenderTargetView;
-	ID3D11ShaderResourceView*	DepthShaderRV;
+	ID3D11RenderTargetView *	DepthRTV;
+	ID3D11ShaderResourceView*	DepthSRV;
 
 
 };

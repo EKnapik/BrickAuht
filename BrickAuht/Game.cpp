@@ -52,7 +52,7 @@ void Game::Init()
 {
 	camera = new Camera(width, height);
 	// TODO: Renderer should only take the context and then create the buffers it needs
-	renderer = new Renderer(camera, context, backBufferRTV, depthStencilView, device);
+	renderer = new Renderer(camera, context, device, backBufferRTV, depthStencilView);
 
 	LoadShaders();
 	CreateBasicGeometry();

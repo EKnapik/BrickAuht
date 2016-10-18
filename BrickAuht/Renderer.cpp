@@ -4,9 +4,7 @@
 
 using namespace DirectX;
 
-Renderer::Renderer(Camera *camera, ID3D11DeviceContext *context,
-	ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView,
-	ID3D11Device* device)
+Renderer::Renderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* device, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView)
 {
 	this->camera = camera;
 	this->device = device;
@@ -45,6 +43,8 @@ void Renderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, FLOAT delt
 	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 
 	// Clear the render target and depth buffer
+	// TODO THIS SHOULD NOT BE HERE!!!!!!!!!!!!!
+	// THIS CAN RUIN THE ENTIRE SCENE IF CALLED MULTIPLE TIMES
 	context->ClearRenderTargetView(backBufferRTV, color);
 	context->ClearDepthStencilView(
 		depthStencilView,
