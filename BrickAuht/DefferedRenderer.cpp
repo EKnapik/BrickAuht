@@ -112,51 +112,51 @@ DefferedRenderer::DefferedRenderer(Camera *camera, ID3D11DeviceContext *context,
 	// Depth.
 
 	// Create the depth texture.
-	D3D11_TEXTURE2D_DESC descDepthTexture;
-	ID3D11Texture2D* DepthTexture;
-	ZeroMemory(&descDepthTexture, sizeof(descDepthTexture));
-	descDepthTexture.Width = width;
-	descDepthTexture.Height = height;
-	descDepthTexture.MipLevels = 1;
-	descDepthTexture.ArraySize = 1;
-	descDepthTexture.Format = DXGI_FORMAT_R32_FLOAT;
-	descDepthTexture.SampleDesc.Count = 1;
-	descDepthTexture.SampleDesc.Quality = 0;
-	descDepthTexture.Usage = D3D11_USAGE_DEFAULT;
-	descDepthTexture.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-	descDepthTexture.CPUAccessFlags = 0;
-	descDepthTexture.MiscFlags = 0;
+	D3D11_TEXTURE2D_DESC descPositionTexture;
+	ID3D11Texture2D* PositionTexture;
+	ZeroMemory(&descPositionTexture, sizeof(descPositionTexture));
+	descPositionTexture.Width = width;
+	descPositionTexture.Height = height;
+	descPositionTexture.MipLevels = 1;
+	descPositionTexture.ArraySize = 1;
+	descPositionTexture.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	descPositionTexture.SampleDesc.Count = 1;
+	descPositionTexture.SampleDesc.Quality = 0;
+	descPositionTexture.Usage = D3D11_USAGE_DEFAULT;
+	descPositionTexture.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	descPositionTexture.CPUAccessFlags = 0;
+	descPositionTexture.MiscFlags = 0;
 
-	hr = device->CreateTexture2D(&descDepthTexture, NULL, &DepthTexture);
+	hr = device->CreateTexture2D(&descPositionTexture, NULL, &PositionTexture);
 
 	if (FAILED(hr))
 		printf("Error creating depth texture.\n");
 
 
 	// Create the depth render target.
-	D3D11_RENDER_TARGET_VIEW_DESC depthRTVDesc;
-	ZeroMemory(&depthRTVDesc, sizeof(depthRTVDesc));
-	depthRTVDesc.Format = descDepthTexture.Format;
-	depthRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-	depthRTVDesc.Texture2D.MipSlice = 0;
+	D3D11_RENDER_TARGET_VIEW_DESC PositionRTVDesc;
+	ZeroMemory(&PositionRTVDesc, sizeof(PositionRTVDesc));
+	PositionRTVDesc.Format = descPositionTexture.Format;
+	PositionRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	PositionRTVDesc.Texture2D.MipSlice = 0;
 
-	hr = device->CreateRenderTargetView(DepthTexture, &depthRTVDesc, &DepthRTV);
+	hr = device->CreateRenderTargetView(PositionTexture, &PositionRTVDesc, &PositionRTV);
 
 	if (FAILED(hr))
 		printf("Error creating depth RT.\n");
 
 
 	// Create the depth shader resource view
-	D3D11_SHADER_RESOURCE_VIEW_DESC depthSRVDesc;
-	depthSRVDesc.Format = descDepthTexture.Format;
-	depthSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	depthSRVDesc.Texture2D.MostDetailedMip = 0;
-	depthSRVDesc.Texture2D.MipLevels = 1;
+	D3D11_SHADER_RESOURCE_VIEW_DESC PositionSRVDesc;
+	PositionSRVDesc.Format = descPositionTexture.Format;
+	PositionSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	PositionSRVDesc.Texture2D.MostDetailedMip = 0;
+	PositionSRVDesc.Texture2D.MipLevels = 1;
 
-	hr = device->CreateShaderResourceView(DepthTexture, &depthSRVDesc, &DepthSRV);
+	hr = device->CreateShaderResourceView(PositionTexture, &PositionSRVDesc, &PositionSRV);
 
 	// Don't need the actual depth texture
-	DepthTexture->Release();
+	PositionTexture->Release();
 
 	// create sampler
 	D3D11_SAMPLER_DESC sampleDesc = {};
@@ -189,8 +189,8 @@ DefferedRenderer::~DefferedRenderer()
 	NormalSRV->Release();
 
 	// Depth
-	DepthRTV->Release();
-	DepthSRV->Release();
+	PositionRTV->Release();
+	PositionSRV->Release();
 
 	simpleSampler->Release();
 }
@@ -205,7 +205,7 @@ void DefferedRenderer::Render(std::vector<GameEntity*>* gameEntitys, FLOAT delta
 	// clear all the render targets
 	context->ClearRenderTargetView(AlbedoRTV, clearColor);
 	context->ClearRenderTargetView(NormalRTV, clearColor);
-	context->ClearRenderTargetView(DepthRTV, clearColor);
+	context->ClearRenderTargetView(PositionRTV, clearColor);
 
 	context->ClearDepthStencilView(
 		depthStencilView,
@@ -233,7 +233,7 @@ void DefferedRenderer::Render(std::vector<GameEntity*>* gameEntitys, FLOAT delta
 
 void DefferedRenderer::gBufferRender(std::vector<GameEntity*>* gameEntitys)
 {
-	ID3D11RenderTargetView* RTViews[3] = { AlbedoRTV, NormalRTV, DepthRTV };
+	ID3D11RenderTargetView* RTViews[3] = { AlbedoRTV, NormalRTV, PositionRTV };
 
 	context->OMSetRenderTargets(3, RTViews, depthStencilView);
 
@@ -255,7 +255,7 @@ void DefferedRenderer::lightRender(std::vector<GameEntity*>* gameEntitys)
 	pixelShader->SetSamplerState("basicSampler", simpleSampler);
 	pixelShader->SetShaderResourceView("gAlbedo", AlbedoSRV);
 	pixelShader->SetShaderResourceView("gNormal", NormalSRV);
-	pixelShader->SetShaderResourceView("gDepth", DepthSRV);
+	pixelShader->SetShaderResourceView("gPosition", PositionSRV);
 	pixelShader->CopyAllBufferData();
 
 	UINT stride = sizeof(Vertex);

@@ -27,8 +27,8 @@ private:
 	ID3D11ShaderResourceView*	NormalSRV;
 
 	// Depth
-	ID3D11RenderTargetView *	DepthRTV;
-	ID3D11ShaderResourceView*	DepthSRV;
+	ID3D11RenderTargetView *	PositionRTV;
+	ID3D11ShaderResourceView*	PositionSRV;
 
 	ID3D11SamplerState* simpleSampler;
 };

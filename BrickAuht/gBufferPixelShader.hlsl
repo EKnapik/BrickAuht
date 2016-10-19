@@ -12,7 +12,6 @@ struct VertexToPixel
 	float3 normal		: NORMAL;
 	float3 tangent		: TANGENT;
 	float2 uv			: TEXCOORD0;
-	float2 depth		: TEXCOORD1;
 };
 
 
@@ -47,7 +46,7 @@ GBufferOutput main(VertexToPixel input) : SV_TARGET
 	output.Normal.a = 1.0;
 
 	// Set the depth
-	output.Depth = input.depth.x / input.depth.y;
+	output.Depth = float4(input.worldPos, 1.0);
 
 	return output;
 }

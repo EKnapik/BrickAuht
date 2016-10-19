@@ -5,11 +5,7 @@
 // - Each variable must have a semantic, which defines its usage
 struct VertexToPixel
 {
-	// Data type
-	//  |
-	//  |   Name          Semantic
-	//  |    |                |
-	//  v    v                v
+	
 	float4 position		: SV_POSITION;
 	float3 normal		: NORMAL;
 	float3 worldPos		: POSITION;

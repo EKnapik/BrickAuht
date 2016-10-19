@@ -23,7 +23,6 @@ struct VertexToPixel
 	float3 normal		: NORMAL;
 	float3 tangent		: TANGENT;
 	float2 uv			: TEXCOORD0;
-	float2 depth		: TEXCOORD1;
 };
 
 // --------------------------------------------------------
@@ -51,9 +50,9 @@ VertexToPixel main( VertexShaderInput input )
 	//output.tangent = normalize(output.tangent);
 
 	output.uv = input.uv;
-	// Set the depth (TODO find out what this does...https://github.com/oks2024/DeferredRendering/blob/master/DeferredRendering/RenderGBufferVertexShader.hlsl)
-	output.depth.x = output.position.z;
-	output.depth.y = output.position.w;
+	// This github uses depth then recalculates the world position, so the buffer is smaller
+	// and slightly more acurate because you have more values
+	// (https://github.com/oks2024/DeferredRendering/blob/master/DeferredRendering/RenderGBufferVertexShader.hlsl)
 
 	return output;
 }
