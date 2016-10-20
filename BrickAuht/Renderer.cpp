@@ -1,5 +1,6 @@
 #include "Renderer.h"
 #include "WICTextureLoader.h"
+#include "DDSTextureLoader.h"
 
 
 using namespace DirectX;
@@ -11,6 +12,14 @@ Renderer::Renderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* d
 	this->context = context;
 	this->backBufferRTV = backBufferRTV;
 	this->depthStencilView = depthStencilView;
+
+	D3D11_SAMPLER_DESC samplerDesc = {};
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	AddSampler("default", &samplerDesc);
 }
 
 
@@ -34,6 +43,11 @@ Renderer::~Renderer()
 	typedef std::map<std::string, SimpleVertexShader*>::iterator vertex_type;
 	for (vertex_type iterator = VertexShaderDictionary.begin(); iterator != VertexShaderDictionary.end(); iterator++) {
 		delete iterator->second;
+	}
+
+	typedef std::map<std::string, ID3D11SamplerState*>::iterator sampler_type;
+	for (sampler_type iterator = SamplerDictionary.begin(); iterator != SamplerDictionary.end(); iterator++) {
+		iterator->second->Release();
 	}
 }
 
@@ -81,6 +95,12 @@ void Renderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, FLOAT delt
 			blendState,
 			factors,
 			0xFFFFFFFF);
+		blendMode = true;
+	}
+	else if(blendMode == true)
+	{
+		context->OMSetBlendState(0, 0, 0);
+		blendMode = false;
 	}
 
 	// Send texture Info
@@ -124,6 +144,7 @@ void Renderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, FLOAT delt
 	vertexShader->SetMatrix4x4("view", *camera->GetView());
 	vertexShader->SetMatrix4x4("projection", *camera->GetProjection());
 	pixelShader->SetFloat3("cameraPosition", *camera->GetPosition());
+	pixelShader->SetShaderResourceView("Sky", skyBox->GetSRV());
 
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
@@ -163,6 +184,37 @@ void Renderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, FLOA
 	vertexShader->SetShader();
 	pixelShader->SetShader();
 
+	if (material->transparency == true)
+	{
+		D3D11_BLEND_DESC bd = {};
+		bd.AlphaToCoverageEnable = false;
+		bd.IndependentBlendEnable = false;
+		bd.RenderTarget[0].BlendEnable = true;
+		bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+		bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+		bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+		bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+		bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+		ID3D11BlendState* blendState;
+		device->CreateBlendState(&bd, &blendState);
+
+		float factors[4] = { 1,1,1,1 };
+		context->OMSetBlendState(
+			blendState,
+			factors,
+			0xFFFFFFFF);
+		blendMode = true;
+	}
+	else if (blendMode == true)
+	{
+		float factors[4] = { 1,1,1,1 };
+		context->OMSetBlendState(0, factors, 0xFFFFFFFF);
+		blendMode = false;
+	}
+
 	// Send texture Info
 	pixelShader->SetSamplerState("basicSampler", material->GetSamplerState());
 	pixelShader->SetShaderResourceView("diffuseTexture", material->GetSRV());
@@ -204,6 +256,7 @@ void Renderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, FLOA
 	vertexShader->SetMatrix4x4("view", *camera->GetView());
 	vertexShader->SetMatrix4x4("projection", *camera->GetProjection());
 	pixelShader->SetFloat3("cameraPosition", *camera->GetPosition());
+	pixelShader->SetShaderResourceView("Sky", skyBox->GetSRV());
 
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
@@ -217,6 +270,36 @@ void Renderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, FLOA
 		context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 		context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
 	}
+}
+
+void Renderer::DrawSkyBox()
+{
+	CubeMap* sky = skyBox;
+	SimpleVertexShader* vertexShader = GetVertexShader("skybox");
+	SimplePixelShader* pixelShader = GetPixelShader("skybox");
+
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	ID3D11Buffer* vertTemp = GetMesh("cube")->GetVertexBuffer();
+	context->IASetVertexBuffers(0, 1, &vertTemp, &stride, &offset);
+	context->IASetIndexBuffer(GetMesh("cube")->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
+	vertexShader->SetMatrix4x4("view", *camera->GetView());
+	vertexShader->SetMatrix4x4("projection", *camera->GetProjection());
+	vertexShader->CopyAllBufferData();
+	vertexShader->SetShader();
+
+	pixelShader->SetShaderResourceView("Sky", sky->GetSRV());
+	pixelShader->CopyAllBufferData();
+	pixelShader->SetShader();
+	context->RSSetState(sky->rastState);
+	context->OMSetDepthStencilState(sky->skyDepthState, 0);
+
+	context->DrawIndexed(GetMesh("cube")->GetIndexCount(), 0, 0);
+
+	// Reset the states!
+	context->RSSetState(0);
+	context->OMSetDepthStencilState(0, 0);
 }
 
 void Renderer::AddMesh(std::string name, Mesh * mesh)
@@ -238,26 +321,51 @@ void Renderer::AddMaterial(std::string name, Material * material)
 	material->AddReference();
 }
 
-void Renderer::AddMaterial(std::string name, std::wstring path, D3D11_SAMPLER_DESC* sampleDesc)
+void Renderer::AddMaterial(std::string name, std::wstring path, std::string sampler)
 {
 	ID3D11ShaderResourceView* SRV;
 	CreateWICTextureFromFile(device, context, path.c_str(), 0, &SRV);
-	ID3D11SamplerState* samplerState;
-	device->CreateSamplerState(sampleDesc, &samplerState);
-	Material* mat = new Material(SRV, samplerState);
+	Material* mat = new Material(SRV, GetSampler(sampler));
 	MaterialDictionary.insert(std::pair<std::string, Material*>(name, mat));
 	mat->AddReference();
 }
 
 void Renderer::AddMaterial(std::string name, std::wstring path)
 {
-	D3D11_SAMPLER_DESC sampleDesc = {};
-	sampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampleDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	sampleDesc.MaxLOD = D3D11_FLOAT32_MAX;
-	AddMaterial(name, path, &sampleDesc);
+	AddMaterial(name, path, "default");
+}
+
+void Renderer::AddCubeMaterial(std::string name, CubeMap * material)
+{
+	MaterialDictionary.insert(std::pair<std::string, Material*>(name, material));
+	material->AddReference();
+}
+
+void Renderer::AddCubeMaterial(std::string name, std::wstring path, std::string sampler, D3D11_RASTERIZER_DESC* rasterDesc, D3D11_DEPTH_STENCIL_DESC* depthStencilDesc)
+{
+	ID3D11ShaderResourceView* SRV;
+	HRESULT error = CreateDDSTextureFromFile(device, path.c_str(), 0, &SRV);
+	ID3D11RasterizerState* rastState;
+	ID3D11DepthStencilState* depthState;
+	device->CreateRasterizerState(rasterDesc, &rastState);
+	device->CreateDepthStencilState(depthStencilDesc, &depthState);
+	CubeMap* mat = new CubeMap(rastState, depthState, SRV, GetSampler(sampler));
+	MaterialDictionary.insert(std::pair<std::string, Material*>(name, mat));
+	mat->AddReference();
+}
+
+void Renderer::AddCubeMaterial(std::string name, std::wstring path)
+{
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+	dsDesc.DepthEnable = true;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL; // Make sure we can see the sky (at max depth)
+
+	D3D11_RASTERIZER_DESC rsDesc = {};
+	rsDesc.FillMode = D3D11_FILL_SOLID;
+	rsDesc.CullMode = D3D11_CULL_FRONT;
+	rsDesc.DepthClipEnable = true;
+	AddCubeMaterial(name, path, "default", &rsDesc, &dsDesc);
 }
 
 void Renderer::AddVertexShader(std::string name, std::wstring path)
@@ -283,6 +391,23 @@ void Renderer::AddPixelShader(std::string name, std::wstring path)
 		pixelShader->LoadShaderFile(path.c_str());
 	}
 	PixelShaderDictionary.insert(std::pair<std::string, SimplePixelShader*>(name, pixelShader));
+}
+
+void Renderer::AddSampler(std::string name, D3D11_SAMPLER_DESC * sampleDesc)
+{
+	ID3D11SamplerState* samplerState;
+	device->CreateSamplerState(sampleDesc, &samplerState);
+	SamplerDictionary.insert(std::pair<std::string, ID3D11SamplerState*>(name, samplerState));
+}
+
+ID3D11SamplerState * Renderer::GetSampler(std::string name)
+{
+	return SamplerDictionary.at(name);
+}
+
+void Renderer::SetSkyBox(std::string name)
+{
+	skyBox = (CubeMap*)GetMaterial(name);
 }
 
 Mesh * Renderer::GetMesh(std::string name)

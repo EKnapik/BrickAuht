@@ -30,7 +30,7 @@ BrickAuhtScene::BrickAuhtScene()
 		}
 	}
 
-	GameEntity* temp = new GameEntity("torus", "greenopaque");
+	GameEntity* temp = new GameEntity("cube", "greenopaque");
 	paddle = new Ball();
 	paddle->SetEntity(temp);
 	paddle->kinematics->SetPosition(VEC3(0, 0, -4.5f));

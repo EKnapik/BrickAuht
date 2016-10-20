@@ -18,5 +18,17 @@ void Material::Release()
 Material::~Material()
 {
 	SRV->Release();
-	SamplerState->Release();
+}
+
+CubeMap::CubeMap(ID3D11RasterizerState * rastState, ID3D11DepthStencilState * skyDepthState, ID3D11ShaderResourceView* SRV, ID3D11SamplerState* SamplerState)
+	: Material(SRV, SamplerState)
+{
+	this->rastState = rastState;
+	this->skyDepthState = skyDepthState;
+}
+
+CubeMap::~CubeMap()
+{
+	rastState->Release();
+	skyDepthState->Release();
 }

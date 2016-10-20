@@ -57,7 +57,8 @@ void Game::Init()
 	renderer = new Renderer(camera, context, device, backBufferRTV, depthStencilView);
 
 	LoadShaders();
-	CreateBasicGeometry();
+	LoadMeshes();
+	LoadMaterials();
 
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
@@ -67,7 +68,8 @@ void Game::Init()
 	light.DiffuseColor = VEC4(0, 0, 1, 1);
 	light.Direction = VEC3(1, -1, 0);
 
-	printf("\nShift + number keys will change the shape!");
+	gameManager.SetActiveScene(new BrickAuhtScene());
+	renderer->SetSkyBox("skybox");
 }
 
 // --------------------------------------------------------
@@ -78,17 +80,11 @@ void Game::LoadShaders()
 	renderer->AddVertexShader("default", L"VertexShader.cso");
 	renderer->AddPixelShader("default", L"PixelShader.cso");
 
-	renderer->AddMaterial("default", L"Assets/Textures/MetalPlate.png");
-	renderer->AddMaterial("electricity", L"Assets/Textures/Electricity.png");
-	renderer->AddMaterial("greenopaque", L"Assets/Textures/GreenOpaque.png");
-	renderer->GetMaterial("greenopaque")->transparency = true;
-	renderer->AddMaterial("gridclip", L"Assets/Textures/GridClip.png");
+	renderer->AddVertexShader("skybox", L"SkyVertex.cso");
+	renderer->AddPixelShader("skybox", L"SkyPixel.cso");
 }
 
-// --------------------------------------------------------
-// Creates the geometry we're going to draw - a single triangle for now
-// --------------------------------------------------------
-void Game::CreateBasicGeometry()
+void Game::LoadMeshes()
 {
 	renderer->AddMesh("cone", "Assets/cone.obj");
 	renderer->AddMesh("cube", "Assets/cube.obj");
@@ -97,8 +93,17 @@ void Game::CreateBasicGeometry()
 	renderer->AddMesh("sphere", "Assets/sphere.obj");
 	renderer->AddMesh("torus", "Assets/torus.obj");
 	//renderer->AddMesh("paddle", "Assets/paddle.obj");
+}
 
-	gameManager.SetActiveScene(new BrickAuhtScene());
+void Game::LoadMaterials()
+{
+	renderer->AddMaterial("default", L"Assets/Textures/MetalPlate.png");
+	renderer->AddMaterial("electricity", L"Assets/Textures/Electricity.png");
+	renderer->AddMaterial("greenopaque", L"Assets/Textures/GreenOpaque.png");
+	renderer->GetMaterial("greenopaque")->transparency = true;
+	renderer->AddMaterial("gridclip", L"Assets/Textures/GridClip.png");
+
+	renderer->AddCubeMaterial("skybox", L"Assets/Textures/SunnyCubeMap.dds");
 }
 
 
@@ -163,6 +168,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	//renderer->Render(&gameManager.GameEntities, deltaTime, totalTime);
 	//renderer->DrawOneMaterial(&gameManager.GameEntities,  deltaTime, totalTime);
 	renderer->DrawMultipleMaterials(&gameManager.GameEntities, deltaTime, totalTime);
+	renderer->DrawSkyBox();
 	swapChain->Present(0, 0);
 }
 
