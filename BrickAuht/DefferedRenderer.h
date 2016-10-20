@@ -18,6 +18,8 @@ private:
 	void DrawOneMaterial(std::vector<GameEntity*>* gameEntitys);
 	void DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys);
 
+	// 
+
 	// Albedo
 	ID3D11RenderTargetView *	AlbedoRTV;
 	ID3D11ShaderResourceView*	AlbedoSRV;

@@ -175,6 +175,7 @@ DefferedRenderer::DefferedRenderer(Camera *camera, ID3D11DeviceContext *context,
 
 	AddVertexShader("quad", L"quadVertexShader.cso");
 	AddPixelShader("quad", L"quadPixelShader.cso");
+	AddPixelShader("sphereLight", L"sphereLightPixelShader.cso");
 }
 
 
@@ -243,11 +244,20 @@ void DefferedRenderer::gBufferRender(std::vector<GameEntity*>* gameEntitys)
 
 
 
+/// Only Render Sphere lights currently, could switch the mesh for cone lights and
+/// directions lights (full quads)
 void DefferedRenderer::lightRender(std::vector<GameEntity*>* gameEntitys)
 {
+	// Create a light for testing
+	// can't destroy this!!!
+	GameEntity* testLight = new GameEntity("sphere", "light");
+	testLight->SetPosition(VEC3(0, 0, 5));
+	testLight->SetScale(VEC3(4, 4, 4));
+
+	////////////////////////////////////////////////////////
 	context->OMSetRenderTargets(1, &backBufferRTV, 0);
-	SimpleVertexShader* vertexShader = GetVertexShader("quad");
-	SimplePixelShader* pixelShader = GetPixelShader("quad");
+	SimpleVertexShader* vertexShader = GetVertexShader("default");
+	SimplePixelShader* pixelShader = GetPixelShader("sphereLight");
 	vertexShader->SetShader();
 	pixelShader->SetShader();
 
@@ -256,19 +266,35 @@ void DefferedRenderer::lightRender(std::vector<GameEntity*>* gameEntitys)
 	pixelShader->SetShaderResourceView("gAlbedo", AlbedoSRV);
 	pixelShader->SetShaderResourceView("gNormal", NormalSRV);
 	pixelShader->SetShaderResourceView("gPosition", PositionSRV);
+	// send constant data
+	vertexShader->SetMatrix4x4("view", *camera->GetView());
+	vertexShader->SetMatrix4x4("projection", *camera->GetProjection());
+	// send light
+	PointLight light;
+	light.Color = VEC4(0.8, 0.1, 0.3, 1.0);
+	light.Position = testLight->GetPosition();
+	// TODO
+	pixelShader->SetData("pointLight", &light, sizeof(PointLight));
+	pixelShader->SetFloat3("cameraPosition", *camera->GetPosition());
+	pixelShader->SetFloat("width", 1280.0f);
+	pixelShader->SetFloat("height", 720.0f);
 	pixelShader->CopyAllBufferData();
+
 
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	Mesh* meshTmp;
+	meshTmp = GetMesh("sphere");
 
-	vertexShader->CopyAllBufferData();
-
-	meshTmp = GetMesh("quad");
 	ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
+	vertexShader->SetMatrix4x4("world", *testLight->GetWorld());
+	vertexShader->CopyAllBufferData();
 	context->IASetVertexBuffers(0, 1, &vertTemp, &stride, &offset);
 	context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 	context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
+
+
+	testLight->Release();
 	return;
 
 	// TODO: Send lights that sample the position data in the buffer. To render properly
@@ -284,6 +310,8 @@ void DefferedRenderer::lightRender(std::vector<GameEntity*>* gameEntitys)
 		context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 		context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
 	}
+
+	
 }
 
 void DefferedRenderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys)

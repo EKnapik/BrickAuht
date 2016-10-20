@@ -9,13 +9,15 @@ SamplerState basicSampler	: register(s0);
 struct PointLight
 {
 	float4 Color;
-	float4 Position; // Intensity is stored within the position's alpha value
+	float3 Position; // Intensity is stored within the position's alpha value
 };
 
 cbuffer externalData : register(b0)
 {
 	PointLight pointLight;
 	float3 cameraPosition;
+	float width;
+	float height;
 }
 
 struct VertexToPixel
@@ -31,25 +33,26 @@ struct VertexToPixel
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
+	// input.position is in pixel space meaning each pixel has a value and it's (0 - width)x(0 - height)
+	// 0,0 being at upper left, and width,height at lower right (same as uv style)
+	// float valX = input.position.x / 1280;
+	// float valY = input.position.y / 720;
+	float2 gUV = float2(input.position.x / width, input.position.y / height);
+
 	input.normal = normalize(input.normal);
-	float3 gWorldPos = gPosition.Sample(basicSampler, input.position.xy);
-	float3 gNormal = float3(0, 0, 0); // has the same issue as world pos
+	float3 gWorldPos = gPosition.Sample(basicSampler, gUV).xyz;
+	float3 normal = gNormal.Sample(basicSampler, gUV).xyz;
 	float3 dirToLight = normalize(pointLight.Position.xyz - gWorldPos);
-	float pointLightAmount = saturate(dot(gNormal, dirToLight));
+	float pointLightAmount = saturate(dot(normal, dirToLight));
 
 	// specular
 	float3 toCamera = normalize(cameraPosition - gWorldPos);
-	float3 refl = reflect(-dirToLight, gNormal);
+	float3 refl = reflect(-dirToLight, normal);
 	float spec = pow(max(dot(refl, toCamera), 0), 200);
 
-	// also that sampler problem where is the propper sample to be done?
-	float4 surfaceColor = gAlbedo.Sample(basicSampler, input.uv); 
+	float4 surfaceColor = gAlbedo.Sample(basicSampler, gUV);
 
-	// TODO:
-	// I fear that there will be a sampling issue because what is the propper
-	// place to sample the texture and where do I get that info??
-	// Desirebly I was the sphere as if it were flattened onto the screen
-	return gPosition.Sample(basicSampler, input.uv);
+	//return gPosition.Sample(basicSampler, gUV);
 
 	return float4(((pointLight.Color.xyz * pointLightAmount * surfaceColor.xyz) +
 		spec), surfaceColor.a);
