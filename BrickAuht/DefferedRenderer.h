@@ -19,6 +19,7 @@ private:
 	void DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys);
 
 	// 
+	GameEntity* testLight = new GameEntity("sphere", "light");
 
 	// Albedo
 	ID3D11RenderTargetView *	AlbedoRTV;
@@ -33,5 +34,6 @@ private:
 	ID3D11ShaderResourceView*	PositionSRV;
 
 	ID3D11SamplerState* simpleSampler;
+	ID3D11BlendState* blendState;
 };
 

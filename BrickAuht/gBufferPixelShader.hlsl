@@ -42,6 +42,7 @@ GBufferOutput main(VertexToPixel input) : SV_TARGET
 
 	// Output the normal in [0, 1] space.
 	output.Normal.rgb = 0.5f * (input.normal + 1.0f);
+	// output.Normal.rgb = input.normal;
 	// could store the specular component within this normal
 	output.Normal.a = 1.0;
 

@@ -39,9 +39,15 @@ float4 main(VertexToPixel input) : SV_TARGET
 	// float valY = input.position.y / 720;
 	float2 gUV = float2(input.position.x / width, input.position.y / height);
 
-	input.normal = normalize(input.normal);
 	float3 gWorldPos = gPosition.Sample(basicSampler, gUV).xyz;
-	float3 normal = gNormal.Sample(basicSampler, gUV).xyz;
+	// need to unpack normal
+	float3 normal = (gNormal.Sample(basicSampler, gUV).xyz * 2.0f) - 1.0f;
+	float4 surfaceColor = gAlbedo.Sample(basicSampler, gUV);
+
+	// Check for clip
+	// CLIPPING MIGHT NOT BE THE BEST CHOICE BUT IT IS A CHOICE
+	clip(surfaceColor.x + surfaceColor.y + surfaceColor.z + -0.01);
+
 	float3 dirToLight = normalize(pointLight.Position.xyz - gWorldPos);
 	float pointLightAmount = saturate(dot(normal, dirToLight));
 
@@ -50,7 +56,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 refl = reflect(-dirToLight, normal);
 	float spec = pow(max(dot(refl, toCamera), 0), 200);
 
-	float4 surfaceColor = gAlbedo.Sample(basicSampler, gUV);
+	
 
 	//return gPosition.Sample(basicSampler, gUV);
 

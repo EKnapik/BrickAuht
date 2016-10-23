@@ -176,6 +176,21 @@ DefferedRenderer::DefferedRenderer(Camera *camera, ID3D11DeviceContext *context,
 	AddVertexShader("quad", L"quadVertexShader.cso");
 	AddPixelShader("quad", L"quadPixelShader.cso");
 	AddPixelShader("sphereLight", L"sphereLightPixelShader.cso");
+
+	// Create addative blend state needed for light rendering
+	D3D11_BLEND_DESC bd = {};
+	bd.AlphaToCoverageEnable		= false;
+	bd.IndependentBlendEnable		= false;
+	bd.RenderTarget[0].BlendEnable	= true;
+	bd.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	device->CreateBlendState(&bd, &blendState);
 }
 
 
@@ -194,6 +209,7 @@ DefferedRenderer::~DefferedRenderer()
 	PositionSRV->Release();
 
 	simpleSampler->Release();
+	testLight->Release();
 }
 
 
@@ -201,12 +217,13 @@ void DefferedRenderer::Render(std::vector<GameEntity*>* gameEntitys, FLOAT delta
 {
 	// Background color (Cornflower Blue)
 	const float clearColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+	const float black[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-	context->ClearRenderTargetView(backBufferRTV, clearColor);
+	context->ClearRenderTargetView(backBufferRTV, black);
 	// clear all the render targets
-	context->ClearRenderTargetView(AlbedoRTV, clearColor);
-	context->ClearRenderTargetView(NormalRTV, clearColor);
-	context->ClearRenderTargetView(PositionRTV, clearColor);
+	context->ClearRenderTargetView(AlbedoRTV, black);
+	context->ClearRenderTargetView(NormalRTV, black);
+	context->ClearRenderTargetView(PositionRTV, black);
 
 	context->ClearDepthStencilView(
 		depthStencilView,
@@ -248,11 +265,13 @@ void DefferedRenderer::gBufferRender(std::vector<GameEntity*>* gameEntitys)
 /// directions lights (full quads)
 void DefferedRenderer::lightRender(std::vector<GameEntity*>* gameEntitys)
 {
+	float factors[4] = { 1,1,1,1 };
+	context->OMSetBlendState(blendState, factors, 0xFFFFFFFF);
 	// Create a light for testing
 	// can't destroy this!!!
-	GameEntity* testLight = new GameEntity("sphere", "light");
-	testLight->SetPosition(VEC3(0, 0, 5));
-	testLight->SetScale(VEC3(4, 4, 4));
+	// TODO need to do addative light blending and fix if the camera is within the object so render within...
+	testLight->SetPosition(VEC3(0, 0, -5));
+	testLight->SetScale(VEC3(3, 3, 3));
 
 	////////////////////////////////////////////////////////
 	context->OMSetRenderTargets(1, &backBufferRTV, 0);
@@ -271,7 +290,7 @@ void DefferedRenderer::lightRender(std::vector<GameEntity*>* gameEntitys)
 	vertexShader->SetMatrix4x4("projection", *camera->GetProjection());
 	// send light
 	PointLight light;
-	light.Color = VEC4(0.8, 0.1, 0.3, 1.0);
+	light.Color = VEC4(253.0f / 255.0f, 184.0f / 255.0f, 19.0f / 255.0f, 1.0f);
 	light.Position = testLight->GetPosition();
 	// TODO
 	pixelShader->SetData("pointLight", &light, sizeof(PointLight));
@@ -293,8 +312,7 @@ void DefferedRenderer::lightRender(std::vector<GameEntity*>* gameEntitys)
 	context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 	context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
 
-
-	testLight->Release();
+	context->OMSetBlendState(0, factors, 0xFFFFFFFF);
 	return;
 
 	// TODO: Send lights that sample the position data in the buffer. To render properly
