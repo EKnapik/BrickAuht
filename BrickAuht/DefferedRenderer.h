@@ -35,5 +35,7 @@ private:
 
 	ID3D11SamplerState* simpleSampler;
 	ID3D11BlendState* blendState;
+	float windowWidth;
+	float windowHeight;
 };
 

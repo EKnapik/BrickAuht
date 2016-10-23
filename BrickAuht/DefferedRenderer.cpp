@@ -5,6 +5,9 @@
 DefferedRenderer::DefferedRenderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* device, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView, int width, int height) :
 	Renderer(camera, context, device, backBufferRTV, depthStencilView)
 {
+	windowHeight = height;
+	windowWidth = width;
+
 	HRESULT hr = S_OK;
 
 	// Create the albedo texture.
@@ -295,8 +298,8 @@ void DefferedRenderer::lightRender(std::vector<GameEntity*>* gameEntitys)
 	// TODO
 	pixelShader->SetData("pointLight", &light, sizeof(PointLight));
 	pixelShader->SetFloat3("cameraPosition", *camera->GetPosition());
-	pixelShader->SetFloat("width", 1280.0f);
-	pixelShader->SetFloat("height", 720.0f);
+	pixelShader->SetFloat("width", windowWidth);
+	pixelShader->SetFloat("height", windowHeight);
 	pixelShader->CopyAllBufferData();
 
 
