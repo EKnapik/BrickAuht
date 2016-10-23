@@ -43,7 +43,8 @@ private:
 
 	// Initialization helper methods - feel free to customize, combine, etc.
 	void LoadShaders(); 
-	void CreateBasicGeometry();
+	void LoadMeshes();
+	void LoadMaterials();
 
 	std::vector<GameEntity*> entities;
 

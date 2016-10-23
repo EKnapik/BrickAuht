@@ -17,6 +17,8 @@ public:
 
 	void AddObject(GameObject* object) { GameObjects->push_back(object); }
 
+	Scene* GetActiveScene() { return activeScene; }
+
 	~GameManager();
 
 private:

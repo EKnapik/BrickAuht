@@ -35,6 +35,7 @@ cbuffer externalData : register(b0)
 }
 
 Texture2D diffuseTexture	: register(t0);
+TextureCube Sky				: register(t2);
 SamplerState basicSampler	: register(s0);
 
 // --------------------------------------------------------
@@ -78,8 +79,14 @@ float4 main(VertexToPixel input) : SV_TARGET
 	// - This color (like most values passing through the rasterizer) is 
 	//   interpolated for each pixel between the corresponding vertices 
 	//   of the triangle we're rendering
-	return	float4(((groundLight.DiffuseColor.xyz * dirGroundLightAmount * surfaceColor.xyz) +
-			(light.DiffuseColor.xyz * dirLightAmount * surfaceColor.xyz) +
-			(pointLight.Color.xyz * pointLightAmount * surfaceColor.xyz) +
-			spec), surfaceColor.a);
+	float3 compoundColor = (groundLight.DiffuseColor.xyz * dirGroundLightAmount * surfaceColor.xyz) +
+		(light.DiffuseColor.xyz * dirLightAmount * surfaceColor.xyz) +
+		(pointLight.Color.xyz * pointLightAmount * surfaceColor.xyz) +
+		spec;
+
+	float4 skyColor = Sky.Sample(basicSampler, reflect(-toCamera, input.normal));
+
+	float4 withSurface = float4(compoundColor, surfaceColor.a);
+
+	return	lerp(skyColor, withSurface, 0.5f);
 }

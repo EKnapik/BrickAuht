@@ -15,12 +15,20 @@ public:
 
 	ID3D11ShaderResourceView* GetSRV() { return SRV; };
 	ID3D11SamplerState* GetSamplerState() { return SamplerState; }
-private:
+protected:
 	int references = 0;
 
 	ID3D11ShaderResourceView* SRV;
 	ID3D11SamplerState* SamplerState;
 
-	~Material();
+	virtual ~Material();
 	
+};
+
+class CubeMap : public Material {
+public:
+	CubeMap(ID3D11RasterizerState* rastState, ID3D11DepthStencilState* skyDepthState, ID3D11ShaderResourceView* SRV, ID3D11SamplerState* SamplerState);
+	ID3D11RasterizerState* rastState;
+	ID3D11DepthStencilState* skyDepthState;
+	~CubeMap();
 };
