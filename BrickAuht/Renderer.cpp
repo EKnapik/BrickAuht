@@ -57,7 +57,7 @@ Renderer::~Renderer()
 	shadowRasterizer->Release();
 }
 
-void Renderer::RenderShadowMap(std::vector<GameEntity*>* gameEntitys)
+void Renderer::RenderShadowMap(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights)
 {
 	// Set up targets
 	context->OMSetRenderTargets(0, 0, shadowDSV);
@@ -77,8 +77,8 @@ void Renderer::RenderShadowMap(std::vector<GameEntity*>* gameEntitys)
 	// Set up our shadow VS shader
 	SimpleVertexShader* shadowShader = GetVertexShader("shadow");
 	shadowShader->SetShader();
-	shadowShader->SetMatrix4x4("view", shadowViewMatrix);
-	shadowShader->SetMatrix4x4("projection", shadowProjectionMatrix);
+	shadowShader->SetMatrix4x4("view", directionalLights->at(0).ViewMatrix );
+	shadowShader->SetMatrix4x4("projection", shadowDirectionalProjectionMatrix);
 
 	// Turn off pixel shader
 	context->PSSetShader(0, 0, 0);
@@ -113,7 +113,7 @@ void Renderer::RenderShadowMap(std::vector<GameEntity*>* gameEntitys)
 	context->RSSetState(0);
 }
 
-void Renderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, FLOAT deltaTime, FLOAT totalTime)
+void Renderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime)
 {
 	// Background color (Cornflower Blue)
 	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
@@ -224,7 +224,7 @@ void Renderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, FLOAT delt
 
 }
 
-void Renderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, FLOAT deltaTime, FLOAT totalTime)
+void Renderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime)
 {
 	// Background color (Cornflower Blue)
 	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
@@ -283,29 +283,20 @@ void Renderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, FLOA
 	//pixelShader->SetShaderResourceView("NormalMap", material->GetNormMap());
 
 	// Send Lighting Info
+	SceneDirectionalLight firstDirectionalLight = directionalLights->at(0);
 	DirectionalLight dLight;
-	dLight.AmbientColor = VEC4(0.1f, 0.1f, 0.1f, 0.0f);
-	dLight.DiffuseColor = VEC4(0, 0, 1, 0);
-	dLight.Direction = VEC3(1, -1, 0);
+	dLight.AmbientColor = firstDirectionalLight.AmbientColor;
+	dLight.DiffuseColor = firstDirectionalLight.DiffuseColor;
+	dLight.Direction = firstDirectionalLight.Direction;
 	pixelShader->SetData(
 		"light",
 		&dLight,
 		sizeof(DirectionalLight));
 
-	// Create a ground light so every object is lit a little bit from the ground
-	DirectionalLight gLight;
-	gLight.AmbientColor = VEC4(0.1f, 0.1f, 0.1f, 1.0f);
-	gLight.DiffuseColor = VEC4(71.0f / 255.0f, 28.0f / 255.0f, 1.0f / 255.0f, 1.0f);
-	gLight.Direction = VEC3(0, 1, 0);
-
-	pixelShader->SetData(
-		"groundLight",
-		&gLight,
-		sizeof(DirectionalLight));
-
+	ScenePointLight firstPointLight = pointLights->at(0);
 	PointLight pLight;
-	pLight.Color = VEC4(253.0f / 255.0f, 184.0f / 255.0f, 19.0f / 255.0f, 1.0f);
-	pLight.Position = VEC3(0, 0, -5);
+	pLight.Color = firstPointLight.Color;
+	pLight.Position = firstPointLight.Position;
 
 	pixelShader->SetData(
 		"pointLight",
@@ -321,8 +312,8 @@ void Renderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, FLOA
 	pixelShader->SetShaderResourceView("Sky", skyBox->GetSRV());
 
 	//Do shadow stuff!
-	vertexShader->SetMatrix4x4("shadowView", shadowViewMatrix);
-	vertexShader->SetMatrix4x4("shadowProjection", shadowProjectionMatrix);
+	vertexShader->SetMatrix4x4("shadowView", firstDirectionalLight.ViewMatrix);
+	vertexShader->SetMatrix4x4("shadowProjection", shadowDirectionalProjectionMatrix);
 	pixelShader->SetShaderResourceView("ShadowMap", shadowSRV);
 	pixelShader->SetSamplerState("ShadowSampler", GetSampler("shadow"));
 
@@ -537,15 +528,13 @@ void Renderer::SetUpShadows()
 	shadowRastDesc.SlopeScaledDepthBias = 1.0f;
 	device->CreateRasterizerState(&shadowRastDesc, &shadowRasterizer);
 
-	XMMATRIX shView = XMMatrixLookAtLH(
-		XMVectorSet(0, 20, -20, 0),
-		XMVectorSet(0, 0, 0, 0),
-		XMVectorSet(0, 1, 0, 0));
-	XMStoreFloat4x4(&shadowViewMatrix, XMMatrixTranspose(shView));
-
 	// Orthographic to match the directional light
+	//TODO: This shouldn't call direct X math stuff directly. Fix that
 	XMMATRIX shProj = XMMatrixOrthographicLH(10, 10, 0.1f, 100.0f);
-	XMStoreFloat4x4(&shadowProjectionMatrix, XMMatrixTranspose(shProj));
+	XMStoreFloat4x4(&shadowDirectionalProjectionMatrix, XMMatrixTranspose(shProj));
+
+	XMMATRIX shProjPersp = XMMatrixPerspectiveLH(10, 10, 0.1f, 100.0f);
+	XMStoreFloat4x4(&shadowPointProjectionMatrix, XMMatrixTranspose(shProj));
 }
 
 Mesh * Renderer::GetMesh(std::string name)

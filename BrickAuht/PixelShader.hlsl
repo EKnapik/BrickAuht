@@ -30,7 +30,6 @@ struct PointLight {
 cbuffer externalData : register(b0)
 {
 	DirectionalLight light;
-	DirectionalLight groundLight;
 	PointLight pointLight;
 	float3 cameraPosition;
 }
@@ -60,10 +59,6 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 dirToLight = -normalize(light.Direction);
 	float dirLightAmount = saturate(dot(input.normal, dirToLight));
 
-	// Directional Light 2
-	float3 dirToGroundLight = -normalize(groundLight.Direction);
-	float dirGroundLightAmount = saturate(dot(input.normal, dirToGroundLight));
-
 	// Point Light
 	float3 dirToPointLight = normalize(pointLight.Position - input.worldPos);
 	float pointLightAmount = saturate(dot(input.normal, dirToPointLight));
@@ -82,8 +77,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	// - This color (like most values passing through the rasterizer) is 
 	//   interpolated for each pixel between the corresponding vertices 
 	//   of the triangle we're rendering
-	float3 compoundColor = (groundLight.DiffuseColor.xyz * dirGroundLightAmount * surfaceColor.xyz) +
-		(light.DiffuseColor.xyz * dirLightAmount * surfaceColor.xyz) +
+	float3 compoundColor = (light.DiffuseColor.xyz * dirLightAmount * surfaceColor.xyz) +
 		(pointLight.Color.xyz * pointLightAmount * surfaceColor.xyz) +
 		spec;
 

@@ -15,13 +15,13 @@ public:
 	Renderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* device, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView);
 	~Renderer();
 
-	void RenderShadowMap(std::vector<GameEntity*>* gameEntitys);
+	void RenderShadowMap(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights);
 
-	virtual void Render(std::vector<GameEntity*>* gameEntitys, FLOAT deltaTime, FLOAT totalTime) {};
+	virtual void Render(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime) {};
 
-	virtual void DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, FLOAT deltaTime, FLOAT totalTime);
+	virtual void DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime);
 
-	void DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, FLOAT deltaTime, FLOAT totalTime);
+	void DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime);
 
 	void DrawSkyBox();
 
@@ -83,7 +83,8 @@ protected:
 	bool blendMode = false;
 
 	int shadowMapSize = 1080;
-	DirectX::XMFLOAT4X4 shadowViewMatrix;
-	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
+
+	DirectX::XMFLOAT4X4 shadowDirectionalProjectionMatrix;
+	DirectX::XMFLOAT4X4 shadowPointProjectionMatrix;
 };
 

@@ -202,4 +202,18 @@ namespace GMath
 	{
 		DirectX::XMStoreFloat(length, DirectX::XMVector3Length(GetVector(vec)));
 	}
+
+	inline void SetMatrixLookAtLH(MAT4X4* toSet, VEC4* eye, VEC4* focus, VEC4* up)
+	{
+		MATRIX view = DirectX::XMMatrixLookAtLH(
+			GetVector(eye),
+			GetVector(focus),
+			GetVector(up));
+		DirectX::XMStoreFloat4x4(toSet, DirectX::XMMatrixTranspose(view));
+	}
+
+	/*inline void SetOrthographicLH()
+	{
+
+	}*/
 }
