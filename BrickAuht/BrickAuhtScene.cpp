@@ -18,7 +18,7 @@ BrickAuhtScene::BrickAuhtScene()
 	{
 		for (int y = 0; y < 5; y++)
 		{
-			GameEntity* temp = new GameEntity("cube", "gridclip");
+			GameEntity* temp = new GameEntity("cube", "greenopaque");
 
 			Ball* ball = new Ball();
 			ball->SetEntity(temp);
@@ -29,6 +29,13 @@ BrickAuhtScene::BrickAuhtScene()
 			GameObjects.push_back(ball);
 		}
 	}
+
+	GameEntity* cubeBox = new GameEntity("cube", "default");
+	cubeBox->SetScale(VEC3(10, 10, 10));
+	GameObject* cubeObject = new GameObject();
+	cubeObject->SetEntity(cubeBox);
+	cubeBox->SetPosition(VEC3(0, -8.0f, 0));
+	GameObjects.push_back(cubeObject);
 
 	GameEntity* temp = new GameEntity("cube", "greenopaque");
 	paddle = new Ball();

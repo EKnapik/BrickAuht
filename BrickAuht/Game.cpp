@@ -55,11 +55,12 @@ void Game::Init()
 	// TODO: Renderer should only take the context and then create the buffers it needs
 	// renderer = new DefferedRenderer(camera, context, device, backBufferRTV, depthStencilView, width, height);
 	renderer = new Renderer(camera, context, device, backBufferRTV, depthStencilView);
+	renderer->width = width;
+	renderer->height = height;
 
 	LoadShaders();
 	LoadMeshes();
 	LoadMaterials();
-
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -82,6 +83,8 @@ void Game::LoadShaders()
 
 	renderer->AddVertexShader("skybox", L"SkyVertex.cso");
 	renderer->AddPixelShader("skybox", L"SkyPixel.cso");
+
+	renderer->AddVertexShader("shadow", L"ShadowVertex.cso");
 }
 
 void Game::LoadMeshes()
@@ -168,6 +171,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	//renderer->Render(&gameManager.GameEntities, deltaTime, totalTime);
 	//renderer->DrawOneMaterial(&gameManager.GameEntities,  deltaTime, totalTime);
 	//renderer->DrawMultipleMaterials(&gameManager.GameEntities, deltaTime, totalTime);
+	renderer->RenderShadowMap(&gameManager.GameEntities);
 	renderer->DrawMultipleMaterials(&gameManager.GameEntities, deltaTime, totalTime);
 	renderer->DrawSkyBox();
 

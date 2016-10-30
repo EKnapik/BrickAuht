@@ -5,6 +5,9 @@ cbuffer externalData : register(b0)
 	matrix world;
 	matrix view;
 	matrix projection;
+
+	matrix shadowView;
+	matrix shadowProjection;
 };
 
 
@@ -22,6 +25,7 @@ struct VertexToPixel
 	float3 normal		: NORMAL;
 	float3 worldPos		: POSITION;
 	float2 uv			: TEXCOORD;
+	float4 posForShadow	: TEXCOORD1;
 };
 
 // --------------------------------------------------------
@@ -55,6 +59,9 @@ VertexToPixel main( VertexShaderInput input )
 
 	// Copy over the inputs UV coordinates
 	output.uv = input.uv;
+
+	matrix shadowWVP = mul(mul(world, shadowView), shadowProjection);
+	output.posForShadow = mul(float4(input.position, 1), shadowWVP);
 
 	// Whatever we return will make its way through the pipeline to the
 	// next programmable stage we're using (the pixel shader for now)
