@@ -10,6 +10,7 @@ struct VertexToPixel
 	float3 normal		: NORMAL;
 	float3 worldPos		: POSITION;
 	float2 uv			: TEXCOORD;
+	float4 posForShadow : TEXCOORD1;
 };
 
 
@@ -29,14 +30,15 @@ struct PointLight {
 cbuffer externalData : register(b0)
 {
 	DirectionalLight light;
-	DirectionalLight groundLight;
 	PointLight pointLight;
 	float3 cameraPosition;
 }
 
 Texture2D diffuseTexture	: register(t0);
+Texture2D ShadowMap			: register(t1);
 TextureCube Sky				: register(t2);
 SamplerState basicSampler	: register(s0);
+SamplerComparisonState ShadowSampler : register(s1);
 
 // --------------------------------------------------------
 // The entry point (main method) for our pixel shader
@@ -57,10 +59,6 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 dirToLight = -normalize(light.Direction);
 	float dirLightAmount = saturate(dot(input.normal, dirToLight));
 
-	// Directional Light 2
-	float3 dirToGroundLight = -normalize(groundLight.Direction);
-	float dirGroundLightAmount = saturate(dot(input.normal, dirToGroundLight));
-
 	// Point Light
 	float3 dirToPointLight = normalize(pointLight.Position - input.worldPos);
 	float pointLightAmount = saturate(dot(input.normal, dirToPointLight));
@@ -79,8 +77,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	// - This color (like most values passing through the rasterizer) is 
 	//   interpolated for each pixel between the corresponding vertices 
 	//   of the triangle we're rendering
-	float3 compoundColor = (groundLight.DiffuseColor.xyz * dirGroundLightAmount * surfaceColor.xyz) +
-		(light.DiffuseColor.xyz * dirLightAmount * surfaceColor.xyz) +
+	float3 compoundColor = (light.DiffuseColor.xyz * dirLightAmount * surfaceColor.xyz) +
 		(pointLight.Color.xyz * pointLightAmount * surfaceColor.xyz) +
 		spec;
 
@@ -88,5 +85,16 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	float4 withSurface = float4(compoundColor, surfaceColor.a);
 
-	return	lerp(skyColor, withSurface, 0.5f);
+	// Time for shadows!
+	// Figure out this pixel's UV in the SHADOW MAP
+	float2 shadowUV = input.posForShadow.xy / input.posForShadow.w * 0.5f + 0.5f;
+	shadowUV.y = 1.0f - shadowUV.y; // Flip the Y since UV coords and screen coords are different
+
+									// Calculate this pixel's actual depth from the light
+	float depthFromLight = input.posForShadow.z / input.posForShadow.w;
+
+	// Sample the shadow map
+	float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, depthFromLight);
+
+	return	lerp(skyColor, withSurface, 0.9f) * shadowAmount;
 }

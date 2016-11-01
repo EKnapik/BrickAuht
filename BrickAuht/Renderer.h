@@ -15,11 +15,13 @@ public:
 	Renderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* device, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView);
 	~Renderer();
 
-	virtual void Render(std::vector<GameEntity*>* gameEntitys, FLOAT deltaTime, FLOAT totalTime) {};
+	void RenderShadowMap(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights);
 
-	virtual void DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, FLOAT deltaTime, FLOAT totalTime);
+	virtual void Render(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime) {};
 
-	void DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, FLOAT deltaTime, FLOAT totalTime);
+	virtual void DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime);
+
+	void DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime);
 
 	void DrawSkyBox();
 
@@ -51,13 +53,21 @@ public:
 
 	void SetSkyBox(std::string name);
 
+	int width, height;
+
 protected:
+
+	void SetUpShadows();
+
 	Camera *camera;
 
 	ID3D11Device*			device;
 	ID3D11DeviceContext*	context;
 	ID3D11RenderTargetView* backBufferRTV;
 	ID3D11DepthStencilView* depthStencilView;
+	ID3D11DepthStencilView* shadowDSV;
+	ID3D11ShaderResourceView* shadowSRV;
+	ID3D11RasterizerState* shadowRasterizer;
 
 	std::map<std::string, Mesh*>				MeshDictionary;
 	std::map<std::string, Material*>			MaterialDictionary;
@@ -71,5 +81,10 @@ protected:
 	CubeMap* skyBox = nullptr;
 
 	bool blendMode = false;
+
+	int shadowMapSize = 1080;
+
+	DirectX::XMFLOAT4X4 shadowDirectionalProjectionMatrix;
+	DirectX::XMFLOAT4X4 shadowPointProjectionMatrix;
 };
 

@@ -18,7 +18,7 @@ BrickAuhtScene::BrickAuhtScene()
 	{
 		for (int y = 0; y < 5; y++)
 		{
-			GameEntity* temp = new GameEntity("cube", "gridclip");
+			GameEntity* temp = new GameEntity("cube", "greenopaque");
 
 			Ball* ball = new Ball();
 			ball->SetEntity(temp);
@@ -30,6 +30,13 @@ BrickAuhtScene::BrickAuhtScene()
 		}
 	}
 
+	GameEntity* cubeBox = new GameEntity("cube", "default");
+	cubeBox->SetScale(VEC3(10, 10, 10));
+	GameObject* cubeObject = new GameObject();
+	cubeObject->SetEntity(cubeBox);
+	cubeBox->SetPosition(VEC3(0, -8.0f, 0));
+	GameObjects.push_back(cubeObject);
+
 	GameEntity* temp = new GameEntity("cube", "greenopaque");
 	paddle = new Ball();
 	paddle->SetEntity(temp);
@@ -37,6 +44,14 @@ BrickAuhtScene::BrickAuhtScene()
 	balls.push_back(paddle);
 	GameObjects.push_back(paddle);
 
+	PointLights.push_back(ScenePointLight(
+		VEC4(253.0f / 255.0f, 184.0f / 255.0f, 19.0f / 255.0f, 1.0f),
+		VEC3(0, 0, -5)));
+
+	DirectionalLights.push_back(SceneDirectionalLight(
+		VEC4(0.1f, 0.1f, 0.1f, 1.0f),
+		VEC4(71.0f / 255.0f, 28.0f / 255.0f, 1.0f / 255.0f, 1.0f),
+		VEC3(0, 20, -20)));
 }
 
 void BrickAuhtScene::Initialize()

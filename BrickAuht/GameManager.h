@@ -19,6 +19,9 @@ public:
 
 	Scene* GetActiveScene() { return activeScene; }
 
+	std::vector<SceneDirectionalLight> GetDirectionalLights() { return activeScene->DirectionalLights; }
+	std::vector<ScenePointLight> GetPointLights() { return activeScene->PointLights; }
+
 	~GameManager();
 
 private:
