@@ -212,6 +212,7 @@ DefferedRenderer::~DefferedRenderer()
 	PositionSRV->Release();
 
 	simpleSampler->Release();
+	blendState->Release();
 	testLight->Release();
 }
 
