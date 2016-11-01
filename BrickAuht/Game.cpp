@@ -53,8 +53,8 @@ void Game::Init()
 {
 	camera = new Camera(width, height);
 	// TODO: Renderer should only take the context and then create the buffers it needs
-	// renderer = new DefferedRenderer(camera, context, device, backBufferRTV, depthStencilView, width, height);
-	renderer = new Renderer(camera, context, device, backBufferRTV, depthStencilView);
+	renderer = new DefferedRenderer(camera, context, device, backBufferRTV, depthStencilView, width, height);
+	// renderer = new Renderer(camera, context, device, backBufferRTV, depthStencilView);
 	renderer->width = width;
 	renderer->height = height;
 
@@ -85,7 +85,18 @@ void Game::LoadShaders()
 	renderer->AddPixelShader("skybox", L"SkyPixel.cso");
 
 	renderer->AddVertexShader("shadow", L"ShadowVertex.cso");
+
+	// Create shaders for deffered
+	renderer->AddVertexShader("gBuffer", L"gBufferVertexShader.cso");
+	renderer->AddPixelShader("gBuffer", L"gBufferPixelShader.cso");
+	renderer->AddVertexShader("quad", L"quadVertexShader.cso");
+	renderer->AddPixelShader("quad", L"quadPixelShader.cso");
+	renderer->AddPixelShader("sphereLight", L"sphereLightPixelShader.cso");
 }
+
+
+
+
 
 void Game::LoadMeshes()
 {
@@ -95,6 +106,8 @@ void Game::LoadMeshes()
 	renderer->AddMesh("helix", "Assets/helix.obj");
 	renderer->AddMesh("sphere", "Assets/sphere.obj");
 	renderer->AddMesh("torus", "Assets/torus.obj");
+	// full screen quad mesh
+	renderer->AddMesh("quad", new Mesh(device));
 	//renderer->AddMesh("paddle", "Assets/paddle.obj");
 }
 
@@ -168,12 +181,12 @@ void Game::Update(float deltaTime, float totalTime)
 // --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
-	//renderer->Render(&gameManager.GameEntities, deltaTime, totalTime);
+	renderer->Render(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights(), deltaTime, totalTime);
 	//renderer->DrawOneMaterial(&gameManager.GameEntities,  deltaTime, totalTime);
 	//renderer->DrawMultipleMaterials(&gameManager.GameEntities, deltaTime, totalTime);
-	renderer->RenderShadowMap(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights());
-	renderer->DrawMultipleMaterials(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights(), deltaTime, totalTime);
-	renderer->DrawSkyBox();
+	//renderer->RenderShadowMap(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights());
+	//renderer->DrawMultipleMaterials(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights(), deltaTime, totalTime);
+	//renderer->DrawSkyBox();
 
 	swapChain->Present(0, 0);
 }

@@ -23,8 +23,9 @@ public:
 
 class ScenePointLight {
 public:
-	ScenePointLight(VEC4 color, VEC3 position);
+	ScenePointLight(VEC4 color, VEC3 position, float intensity);
 	VEC4 Color;
 	VEC3 Position;
+	VEC3 Intensity;
 	MAT4X4 ViewMatrix;
 };

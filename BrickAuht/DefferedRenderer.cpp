@@ -61,7 +61,6 @@ DefferedRenderer::DefferedRenderer(Camera *camera, ID3D11DeviceContext *context,
 
 
 	// Normal.
-
 	// Create the normal texture.
 	D3D11_TEXTURE2D_DESC descNormalTexture;
 	ID3D11Texture2D* NormalTexture;
@@ -113,7 +112,6 @@ DefferedRenderer::DefferedRenderer(Camera *camera, ID3D11DeviceContext *context,
 	NormalTexture->Release();
 
 	// Depth.
-
 	// Create the depth texture.
 	D3D11_TEXTURE2D_DESC descPositionTexture;
 	ID3D11Texture2D* PositionTexture;
@@ -170,16 +168,6 @@ DefferedRenderer::DefferedRenderer(Camera *camera, ID3D11DeviceContext *context,
 	sampleDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	device->CreateSamplerState(&sampleDesc, &simpleSampler);
 
-	// Add required quad mesh
-	AddMesh("quad", new Mesh(device));
-	// Create The Shaders
-	AddVertexShader("gBuffer", L"gBufferVertexShader.cso");
-	AddPixelShader("gBuffer", L"gBufferPixelShader.cso");
-
-	AddVertexShader("quad", L"quadVertexShader.cso");
-	AddPixelShader("quad", L"quadPixelShader.cso");
-	AddPixelShader("sphereLight", L"sphereLightPixelShader.cso");
-
 	// Create addative blend state needed for light rendering
 	D3D11_BLEND_DESC bd = {};
 	bd.AlphaToCoverageEnable		= false;
@@ -192,8 +180,14 @@ DefferedRenderer::DefferedRenderer(Camera *camera, ID3D11DeviceContext *context,
 	bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
 	bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
 	device->CreateBlendState(&bd, &blendState);
+
+	// Create raster state for rendering lights propperly
+	D3D11_RASTERIZER_DESC ligtRastDesc = {};
+	ligtRastDesc.FillMode = D3D11_FILL_SOLID;
+	ligtRastDesc.CullMode = D3D11_CULL_FRONT;
+	ligtRastDesc.DepthClipEnable = true;
+	device->CreateRasterizerState(&ligtRastDesc, &lightRastState);
 }
 
 
@@ -213,11 +207,12 @@ DefferedRenderer::~DefferedRenderer()
 
 	simpleSampler->Release();
 	blendState->Release();
-	testLight->Release();
+	lightRastState->Release();
 }
 
 
-void DefferedRenderer::Render(std::vector<GameEntity*>* gameEntitys, FLOAT deltaTime, FLOAT totalTime)
+void DefferedRenderer::Render(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights,
+					std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime)
 {
 	// Background color (Cornflower Blue)
 	const float clearColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
@@ -235,21 +230,11 @@ void DefferedRenderer::Render(std::vector<GameEntity*>* gameEntitys, FLOAT delta
 		1.0f,
 		0);
 
-	std::vector<GameEntity*> solidEntities;
-	std::vector<GameEntity*> lightEntities;
-	for (int i = 0; i < gameEntitys->size(); i++)
-	{
-		if (gameEntitys->at(i)->GetMaterial() == "light")
-		{
-			lightEntities.push_back(gameEntitys->at(i));
-		}
-		else {
-			solidEntities.push_back(gameEntitys->at(i));
-		}
-	}
 
-	gBufferRender(&solidEntities);
-	lightRender(&lightEntities);
+
+	gBufferRender(gameEntitys);
+	pointLightRender(pointLights);
+	directionalLightRender(directionalLights);
 }
 
 
@@ -258,26 +243,19 @@ void DefferedRenderer::gBufferRender(std::vector<GameEntity*>* gameEntitys)
 	ID3D11RenderTargetView* RTViews[3] = { AlbedoRTV, NormalRTV, PositionRTV };
 
 	context->OMSetRenderTargets(3, RTViews, depthStencilView);
-
 	// RENDER NORMALLY NOW
 	DrawOneMaterial(gameEntitys);
 }
 
 
 
-/// Only Render Sphere lights currently, could switch the mesh for cone lights and
-/// directions lights (full quads)
-void DefferedRenderer::lightRender(std::vector<GameEntity*>* gameEntitys)
+/// Only Render Sphere Lights
+void DefferedRenderer::pointLightRender(std::vector<ScenePointLight>* pointLights)
 {
 	float factors[4] = { 1,1,1,1 };
 	context->OMSetBlendState(blendState, factors, 0xFFFFFFFF);
-	// Create a light for testing
-	// can't destroy this!!!
-	// TODO need to do addative light blending and fix if the camera is within the object so render within...
-	testLight->SetPosition(VEC3(0, 0, -5));
-	testLight->SetScale(VEC3(3, 3, 3));
+	context->RSSetState(lightRastState);
 
-	////////////////////////////////////////////////////////
 	context->OMSetRenderTargets(1, &backBufferRTV, 0);
 	SimpleVertexShader* vertexShader = GetVertexShader("default");
 	SimplePixelShader* pixelShader = GetPixelShader("sphereLight");
@@ -292,48 +270,90 @@ void DefferedRenderer::lightRender(std::vector<GameEntity*>* gameEntitys)
 	// send constant data
 	vertexShader->SetMatrix4x4("view", *camera->GetView());
 	vertexShader->SetMatrix4x4("projection", *camera->GetProjection());
-	// send light
-	PointLight light;
-	light.Color = VEC4(253.0f / 255.0f, 184.0f / 255.0f, 19.0f / 255.0f, 1.0f);
-	light.Position = testLight->GetPosition();
-	// TODO
-	pixelShader->SetData("pointLight", &light, sizeof(PointLight));
+
 	pixelShader->SetFloat3("cameraPosition", *camera->GetPosition());
 	pixelShader->SetFloat("width", windowWidth);
 	pixelShader->SetFloat("height", windowHeight);
-	pixelShader->CopyAllBufferData();
-
-
+	
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
-	Mesh* meshTmp;
-	meshTmp = GetMesh("sphere");
-
+	Mesh* meshTmp = GetMesh("sphere");
 	ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
-	vertexShader->SetMatrix4x4("world", *testLight->GetWorld());
-	vertexShader->CopyAllBufferData();
-	context->IASetVertexBuffers(0, 1, &vertTemp, &stride, &offset);
-	context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-	context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
+	PointLight light;
+	MAT4X4 world;
 
-	context->OMSetBlendState(0, factors, 0xFFFFFFFF);
-	return;
+	for (int i = 0; i < pointLights->size(); i++) {
+		// Send light info to pixel shader
+		light.Color = pointLights->at(i).Color;
+		light.Position = pointLights->at(i).Position;
+		pixelShader->SetData("pointLight", &light, sizeof(PointLight));
 
-	// TODO: Send lights that sample the position data in the buffer. To render properly
-	// Change gDepth to be gPosition and then I can render the sphere of influence sampling the pixel values and calculating
-	// I need to pass in the light pos, intensity, color that can be achieved with game entity values
-	for (int i = 0; i < gameEntitys->size(); i++) {
-		vertexShader->SetMatrix4x4("world", *gameEntitys->at(i)->GetWorld());
+		GMath::SetTransposeMatrix(&world, &(GMath::CreateScaleMatrix(&pointLights->at(i).Intensity) * GMath::CreateTranslationMatrix(&pointLights->at(i).Position)));
+		vertexShader->SetMatrix4x4("world", world);
+
+		pixelShader->CopyAllBufferData();
 		vertexShader->CopyAllBufferData();
 
-		meshTmp = GetMesh(gameEntitys->at(i)->GetMesh());
-		ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
 		context->IASetVertexBuffers(0, 1, &vertTemp, &stride, &offset);
 		context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 		context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
 	}
 
-	
+	// RESET STATES
+	context->OMSetBlendState(0, factors, 0xFFFFFFFF);
+	context->RSSetState(0);
+	return;
+}
+
+
+void DefferedRenderer::directionalLightRender(std::vector<SceneDirectionalLight>* dirLights) {
+	float factors[4] = { 1,1,1,1 };
+	context->OMSetBlendState(blendState, factors, 0xFFFFFFFF);
+	context->RSSetState(lightRastState);
+
+	context->OMSetRenderTargets(1, &backBufferRTV, 0);
+	SimpleVertexShader* vertexShader = GetVertexShader("quad");
+	SimplePixelShader* pixelShader = GetPixelShader("quad");
+	vertexShader->SetShader();
+	pixelShader->SetShader();
+
+	// Send G buffers to pixel shader
+	pixelShader->SetSamplerState("basicSampler", simpleSampler);
+	pixelShader->SetShaderResourceView("gAlbedo", AlbedoSRV);
+	pixelShader->SetShaderResourceView("gNormal", NormalSRV);
+	pixelShader->SetShaderResourceView("gPosition", PositionSRV);
+
+	pixelShader->SetFloat3("cameraPosition", *camera->GetPosition());
+	pixelShader->SetFloat("width", windowWidth);
+	pixelShader->SetFloat("height", windowHeight);
+
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	Mesh* meshTmp = GetMesh("quad");
+	ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
+	DirectionalLight light;
+	MAT4X4 world;
+	for (int i = 0; i < pointLights->size(); i++) {
+		// Send light info to pixel shader
+		light.Color = pointLights->at(i).Color;
+		light.Position = pointLights->at(i).Position;
+		pixelShader->SetData("pointLight", &light, sizeof(PointLight));
+
+		GMath::SetTransposeMatrix(&world, &(GMath::CreateScaleMatrix(&pointLights->at(i).Intensity) * GMath::CreateTranslationMatrix(&pointLights->at(i).Position)));
+		vertexShader->SetMatrix4x4("world", world);
+
+		pixelShader->CopyAllBufferData();
+		vertexShader->CopyAllBufferData();
+
+		context->IASetVertexBuffers(0, 1, &vertTemp, &stride, &offset);
+		context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+		context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
+	}
+
+	// RESET STATES
+	context->OMSetBlendState(0, factors, 0xFFFFFFFF);
+	context->RSSetState(0);
+	return;
 }
 
 void DefferedRenderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys)

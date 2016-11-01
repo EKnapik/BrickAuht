@@ -46,7 +46,11 @@ BrickAuhtScene::BrickAuhtScene()
 
 	PointLights.push_back(ScenePointLight(
 		VEC4(253.0f / 255.0f, 184.0f / 255.0f, 19.0f / 255.0f, 1.0f),
-		VEC3(0, 0, -5)));
+		VEC3(0, 0, -2), 5.0));
+
+	PointLights.push_back(ScenePointLight(
+		VEC4(0.9, 0.0, 0.0, 1.0f),
+		VEC3(2, 0, 0), 5.0));
 
 	DirectionalLights.push_back(SceneDirectionalLight(
 		VEC4(0.1f, 0.1f, 0.1f, 1.0f),

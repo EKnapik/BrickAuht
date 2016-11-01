@@ -10,6 +10,8 @@ struct PointLight
 {
 	float4 Color;
 	float3 Position; // Intensity is stored within the position's alpha value
+	// MISSING DISTANCE ATTENUATION...
+	// TODO ^^^
 };
 
 cbuffer externalData : register(b0)
@@ -56,7 +58,6 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 refl = reflect(-dirToLight, normal);
 	float spec = pow(max(dot(refl, toCamera), 0), 200);
 
-	
 
 	//return gPosition.Sample(basicSampler, gUV);
 
