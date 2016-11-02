@@ -399,6 +399,21 @@ void DefferedRenderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntit
 	if (gameEntitys->size() == 0) return;
 	float factors[4] = { 1,1,1,1 };
 
+	D3D11_BLEND_DESC bd = {};
+	bd.AlphaToCoverageEnable = false;
+	bd.IndependentBlendEnable = false;
+	bd.RenderTarget[0].BlendEnable = true;
+	bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	ID3D11BlendState* blendState;
+	device->CreateBlendState(&bd, &blendState);
+
 	for (int i = 0; i < gameEntitys->size(); i++)
 	{
 		Material* material = GetMaterial(gameEntitys->at(i)->GetMaterial());
@@ -406,26 +421,8 @@ void DefferedRenderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntit
 		pixelShader->SetShader();
 
 		if (material->transparency == true)
-		{
-			D3D11_BLEND_DESC bd = {};
-			bd.AlphaToCoverageEnable = false;
-			bd.IndependentBlendEnable = false;
-			bd.RenderTarget[0].BlendEnable = true;
-			bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-			bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-			bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-			bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-			bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-			bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-			bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-			ID3D11BlendState* blendState;
-			device->CreateBlendState(&bd, &blendState);
-			
-			context->OMSetBlendState(
-			blendState,
-			factors,
-			0xFFFFFFFF);
+		{	
+			context->OMSetBlendState(blendState, factors, 0xFFFFFFFF);
 			blendMode = true;
 		} else if (blendMode == true)
 		{
@@ -458,6 +455,7 @@ void DefferedRenderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntit
 		context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
 	}
 
+	blendState->Release();
 	context->OMSetBlendState(0, factors, 0xFFFFFFFF);
 	context->RSSetState(0);
 }

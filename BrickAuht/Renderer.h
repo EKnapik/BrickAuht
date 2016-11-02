@@ -13,7 +13,7 @@ class Renderer
 {
 public:
 	Renderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* device, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView);
-	~Renderer();
+	virtual ~Renderer();
 
 	void RenderShadowMap(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights);
 
