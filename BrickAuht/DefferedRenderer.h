@@ -13,10 +13,11 @@ public:
 
 private:
 
-	void gBufferRender(std::vector<GameEntity*>* gameEntitys);
+	void gBufferRender(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights,
+					std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime);
 	void pointLightRender(std::vector<ScenePointLight>* pointLights);
 	void directionalLightRender(std::vector<SceneDirectionalLight>* dirLights);
-	void DrawOneMaterial(std::vector<GameEntity*>* gameEntitys);
+	//void DrawOneMaterial(std::vector<GameEntity*>* gameEntitys);
 	void DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys);
 
 	// Albedo

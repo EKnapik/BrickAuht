@@ -227,6 +227,7 @@ void Renderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, std::vecto
 void Renderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime)
 {
 	// Background color (Cornflower Blue)
+	/*
 	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 
 	// Clear the render target and depth buffer
@@ -236,6 +237,7 @@ void Renderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, std:
 		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
 		1.0f,
 		0);
+	*/
 
 	if (gameEntitys->size() == 0) return;
 

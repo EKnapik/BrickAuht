@@ -10,6 +10,7 @@ struct DirectionalLight {
 struct PointLight {
 	VEC4 Color;
 	VEC3 Position;
+	FLOAT Radius;
 };
 
 class SceneDirectionalLight {
@@ -23,9 +24,9 @@ public:
 
 class ScenePointLight {
 public:
-	ScenePointLight(VEC4 color, VEC3 position, float intensity);
+	ScenePointLight(VEC4 color, VEC3 position, float radius);
 	VEC4 Color;
 	VEC3 Position;
-	VEC3 Intensity;
+	VEC3 Radius;
 	MAT4X4 ViewMatrix;
 };

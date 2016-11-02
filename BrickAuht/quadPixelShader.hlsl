@@ -31,7 +31,18 @@ struct VertexToPixel
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	return gPosition.Sample(basicSampler, input.uv); 
+	// return float4(1.0, 1.0, 1.0, 1.0);
+	// need to unpack normal
+	float3 normal = (gNormal.Sample(basicSampler, input.uv).xyz * 2.0f) - 1.0f;
+	float4 surfaceColor = gAlbedo.Sample(basicSampler, input.uv);
 
-	return float4(0, 0, 0, 0);
+	// Check for clip
+	// CLIPPING MIGHT NOT BE THE BEST CHOICE BUT IT IS A CHOICE
+	clip(surfaceColor.a + -0.01);
+
+	// NOT INVERTING THE DIRECTION TO THE LIGHT
+	float3 dirToLight = normalize(dirLight.Direction);
+	float dirLightAmount = saturate(dot(normal, dirToLight));
+
+	return (dirLight.AmbientColor) + (dirLight.DiffuseColor * dirLightAmount * surfaceColor);
 }

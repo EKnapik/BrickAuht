@@ -186,7 +186,7 @@ DefferedRenderer::DefferedRenderer(Camera *camera, ID3D11DeviceContext *context,
 	D3D11_RASTERIZER_DESC ligtRastDesc = {};
 	ligtRastDesc.FillMode = D3D11_FILL_SOLID;
 	ligtRastDesc.CullMode = D3D11_CULL_FRONT;
-	ligtRastDesc.DepthClipEnable = true;
+	ligtRastDesc.DepthClipEnable = false;
 	device->CreateRasterizerState(&ligtRastDesc, &lightRastState);
 }
 
@@ -230,21 +230,23 @@ void DefferedRenderer::Render(std::vector<GameEntity*>* gameEntitys, std::vector
 		1.0f,
 		0);
 
-
-
-	gBufferRender(gameEntitys);
+	gBufferRender(gameEntitys, directionalLights, pointLights, deltaTime, totalTime);
+	context->OMSetRenderTargets(1, &backBufferRTV, 0);
 	pointLightRender(pointLights);
+	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
 	directionalLightRender(directionalLights);
+	DrawSkyBox();
 }
 
 
-void DefferedRenderer::gBufferRender(std::vector<GameEntity*>* gameEntitys)
+void DefferedRenderer::gBufferRender(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights,
+					std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime)
 {
 	ID3D11RenderTargetView* RTViews[3] = { AlbedoRTV, NormalRTV, PositionRTV };
 
 	context->OMSetRenderTargets(3, RTViews, depthStencilView);
 	// RENDER NORMALLY NOW
-	DrawOneMaterial(gameEntitys);
+	DrawMultipleMaterials(gameEntitys);
 }
 
 
@@ -256,7 +258,6 @@ void DefferedRenderer::pointLightRender(std::vector<ScenePointLight>* pointLight
 	context->OMSetBlendState(blendState, factors, 0xFFFFFFFF);
 	context->RSSetState(lightRastState);
 
-	context->OMSetRenderTargets(1, &backBufferRTV, 0);
 	SimpleVertexShader* vertexShader = GetVertexShader("default");
 	SimplePixelShader* pixelShader = GetPixelShader("sphereLight");
 	vertexShader->SetShader();
@@ -286,9 +287,10 @@ void DefferedRenderer::pointLightRender(std::vector<ScenePointLight>* pointLight
 		// Send light info to pixel shader
 		light.Color = pointLights->at(i).Color;
 		light.Position = pointLights->at(i).Position;
+		light.Radius = pointLights->at(i).Radius.x;
 		pixelShader->SetData("pointLight", &light, sizeof(PointLight));
 
-		GMath::SetTransposeMatrix(&world, &(GMath::CreateScaleMatrix(&pointLights->at(i).Intensity) * GMath::CreateTranslationMatrix(&pointLights->at(i).Position)));
+		GMath::SetTransposeMatrix(&world, &(GMath::CreateScaleMatrix(&pointLights->at(i).Radius) * GMath::CreateTranslationMatrix(&pointLights->at(i).Position)));
 		vertexShader->SetMatrix4x4("world", world);
 
 		pixelShader->CopyAllBufferData();
@@ -309,9 +311,7 @@ void DefferedRenderer::pointLightRender(std::vector<ScenePointLight>* pointLight
 void DefferedRenderer::directionalLightRender(std::vector<SceneDirectionalLight>* dirLights) {
 	float factors[4] = { 1,1,1,1 };
 	context->OMSetBlendState(blendState, factors, 0xFFFFFFFF);
-	context->RSSetState(lightRastState);
-
-	context->OMSetRenderTargets(1, &backBufferRTV, 0);
+	
 	SimpleVertexShader* vertexShader = GetVertexShader("quad");
 	SimplePixelShader* pixelShader = GetPixelShader("quad");
 	vertexShader->SetShader();
@@ -324,8 +324,7 @@ void DefferedRenderer::directionalLightRender(std::vector<SceneDirectionalLight>
 	pixelShader->SetShaderResourceView("gPosition", PositionSRV);
 
 	pixelShader->SetFloat3("cameraPosition", *camera->GetPosition());
-	pixelShader->SetFloat("width", windowWidth);
-	pixelShader->SetFloat("height", windowHeight);
+	vertexShader->CopyAllBufferData();
 
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
@@ -333,17 +332,13 @@ void DefferedRenderer::directionalLightRender(std::vector<SceneDirectionalLight>
 	ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
 	DirectionalLight light;
 	MAT4X4 world;
-	for (int i = 0; i < pointLights->size(); i++) {
+	for (int i = 0; i < dirLights->size(); i++) {
 		// Send light info to pixel shader
-		light.Color = pointLights->at(i).Color;
-		light.Position = pointLights->at(i).Position;
-		pixelShader->SetData("pointLight", &light, sizeof(PointLight));
-
-		GMath::SetTransposeMatrix(&world, &(GMath::CreateScaleMatrix(&pointLights->at(i).Intensity) * GMath::CreateTranslationMatrix(&pointLights->at(i).Position)));
-		vertexShader->SetMatrix4x4("world", world);
-
+		light.AmbientColor = dirLights->at(i).AmbientColor;
+		light.DiffuseColor = dirLights->at(i).DiffuseColor;
+		light.Direction = dirLights->at(i).Direction;
+		pixelShader->SetData("dirLight", &light, sizeof(DirectionalLight));
 		pixelShader->CopyAllBufferData();
-		vertexShader->CopyAllBufferData();
 
 		context->IASetVertexBuffers(0, 1, &vertTemp, &stride, &offset);
 		context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
@@ -356,6 +351,8 @@ void DefferedRenderer::directionalLightRender(std::vector<SceneDirectionalLight>
 	return;
 }
 
+
+/*
 void DefferedRenderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys)
 {
 	SimpleVertexShader* vertexShader = GetVertexShader("gBuffer");
@@ -392,7 +389,7 @@ void DefferedRenderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys)
 	}
 
 }
-
+*/
 
 void DefferedRenderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys)
 {
@@ -400,61 +397,59 @@ void DefferedRenderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntit
 	SimplePixelShader* pixelShader = GetPixelShader("gBuffer");
 
 	if (gameEntitys->size() == 0) return;
+	float factors[4] = { 1,1,1,1 };
 
-	for (int i = 0; i < gameEntitys->size(); i++) {
+	for (int i = 0; i < gameEntitys->size(); i++)
+	{
 		Material* material = GetMaterial(gameEntitys->at(i)->GetMaterial());
-		//SimpleVertexShader* vertexShader = GetVertexShader(gameEntitys->at(i)->vertexShader);
-		//SimplePixelShader* pixelShader = GetPixelShader(gameEntitys->at(i)->pixelShader);
 		vertexShader->SetShader();
 		pixelShader->SetShader();
+
+		if (material->transparency == true)
+		{
+			D3D11_BLEND_DESC bd = {};
+			bd.AlphaToCoverageEnable = false;
+			bd.IndependentBlendEnable = false;
+			bd.RenderTarget[0].BlendEnable = true;
+			bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+			bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+			bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+			bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+			bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+			bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+			bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+			ID3D11BlendState* blendState;
+			device->CreateBlendState(&bd, &blendState);
+			
+			context->OMSetBlendState(
+			blendState,
+			factors,
+			0xFFFFFFFF);
+			blendMode = true;
+		} else if (blendMode == true)
+		{
+			context->OMSetBlendState(0, factors, 0xFFFFFFFF);
+			blendMode = false;
+		}
 
 		// Send texture Info
 		pixelShader->SetSamplerState("basicSampler", material->GetSamplerState());
 		pixelShader->SetShaderResourceView("diffuseTexture", material->GetSRV());
 		//pixelShader->SetShaderResourceView("NormalMap", material->GetNormMap());
 
-		// Send Lighting Info
-		DirectionalLight dLight;
-		dLight.AmbientColor = VEC4(0.1f, 0.1f, 0.1f, 0.0f);
-		dLight.DiffuseColor = VEC4(0, 0, 1, 0);
-		dLight.Direction = VEC3(1, -1, 0);
-		pixelShader->SetData(
-			"light",
-			&dLight,
-			sizeof(DirectionalLight));
-
-		// Create a ground light so every object is lit a little bit from the ground
-		DirectionalLight gLight;
-		gLight.AmbientColor = VEC4(0.1f, 0.1f, 0.1f, 1.0f);
-		gLight.DiffuseColor = VEC4(71.0f / 255.0f, 28.0f / 255.0f, 1.0f / 255.0f, 1.0f);
-		gLight.Direction = VEC3(0, 1, 0);
-
-		pixelShader->SetData(
-			"groundLight",
-			&gLight,
-			sizeof(DirectionalLight));
-
-		PointLight pLight;
-		pLight.Color = VEC4(253.0f / 255.0f, 184.0f / 255.0f, 19.0f / 255.0f, 1.0f);
-		pLight.Position = VEC3(0, 0, -5);
-
-		pixelShader->SetData(
-			"pointLight",
-			&pLight,
-			sizeof(PointLight));
-
-		pixelShader->CopyAllBufferData();
-
 		// Send Geometry
 		vertexShader->SetMatrix4x4("view", *camera->GetView());
 		vertexShader->SetMatrix4x4("projection", *camera->GetProjection());
 		pixelShader->SetFloat3("cameraPosition", *camera->GetPosition());
+		pixelShader->SetShaderResourceView("Sky", skyBox->GetSRV());
 
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
 		Mesh* meshTmp;
 		vertexShader->SetMatrix4x4("world", *gameEntitys->at(i)->GetWorld());
 		vertexShader->CopyAllBufferData();
+		pixelShader->CopyAllBufferData();
 
 		meshTmp = GetMesh(gameEntitys->at(i)->GetMesh());
 		ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
@@ -462,4 +457,10 @@ void DefferedRenderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntit
 		context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 		context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
 	}
+
+	context->OMSetBlendState(0, factors, 0xFFFFFFFF);
+	context->RSSetState(0);
 }
+
+
+

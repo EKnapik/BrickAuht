@@ -10,8 +10,7 @@ struct PointLight
 {
 	float4 Color;
 	float3 Position; // Intensity is stored within the position's alpha value
-	// MISSING DISTANCE ATTENUATION...
-	// TODO ^^^
+	float Radius;
 };
 
 cbuffer externalData : register(b0)
@@ -52,6 +51,9 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	float3 dirToLight = normalize(pointLight.Position.xyz - gWorldPos);
 	float pointLightAmount = saturate(dot(normal, dirToLight));
+	// Light Attenuation f = 1 / ((d/r) + 1)^2
+	float dist = length(pointLight.Position.xyz - gWorldPos);
+	pointLightAmount = pointLightAmount / pow(((dist / pointLight.Radius) + 1), 2);
 
 	// specular
 	float3 toCamera = normalize(cameraPosition - gWorldPos);
