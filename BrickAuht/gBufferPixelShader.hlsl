@@ -2,8 +2,10 @@
 // Texture info
 Texture2D diffuseTexture	: register(t0);
 Texture2D NormalMap			: register(t1);
-TextureCube Sky				: register(t2);
+Texture2D ShadowMap			: register(t2);
+TextureCube Sky				: register(t3);
 SamplerState basicSampler	: register(s0);
+SamplerComparisonState ShadowSampler : register(s1);
 
 // Struct representing the data we expect to receive from earlier pipeline stages
 struct VertexToPixel
@@ -13,6 +15,7 @@ struct VertexToPixel
 	float3 normal		: NORMAL;
 	float3 tangent		: TANGENT;
 	float2 uv			: TEXCOORD0;
+	float4 posForShadow : TEXCOORD1;
 };
 
 cbuffer externalData : register(b0)
@@ -64,9 +67,18 @@ GBufferOutput main(VertexToPixel input) : SV_TARGET
 	// Set the depth
 	output.Depth = float4(input.worldPos, 1.0);
 
+	// Time for shadows!
+	// Figure out this pixel's UV in the SHADOW MAP
+	float2 shadowUV = input.posForShadow.xy / input.posForShadow.w * 0.5f + 0.5f;
+	shadowUV.y = 1.0f - shadowUV.y; // Flip the Y since UV coords and screen coords are different
+
+									// Calculate this pixel's actual depth from the light
+	float depthFromLight = input.posForShadow.z / input.posForShadow.w;
+
+	// Sample the shadow map
+	float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, depthFromLight);
+
+	output.Color = output.Color * shadowAmount;
+
 	return output;
-
-
-
-	
 }

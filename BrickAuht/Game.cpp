@@ -181,10 +181,10 @@ void Game::Update(float deltaTime, float totalTime)
 // --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
+	renderer->RenderShadowMap(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights());
 	renderer->Render(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights(), deltaTime, totalTime);
 	//renderer->DrawOneMaterial(&gameManager.GameEntities,  deltaTime, totalTime);
 	//renderer->DrawMultipleMaterials(&gameManager.GameEntities, deltaTime, totalTime);
-	//renderer->RenderShadowMap(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights());
 	//renderer->DrawMultipleMaterials(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights(), deltaTime, totalTime);
 	//renderer->DrawSkyBox();
 	

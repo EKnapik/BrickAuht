@@ -18,7 +18,7 @@ private:
 	void pointLightRender(std::vector<ScenePointLight>* pointLights);
 	void directionalLightRender(std::vector<SceneDirectionalLight>* dirLights);
 	//void DrawOneMaterial(std::vector<GameEntity*>* gameEntitys);
-	void DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys);
+	void DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, SceneDirectionalLight* firstDirectionalLight);
 
 	// Albedo
 	ID3D11RenderTargetView *	AlbedoRTV;

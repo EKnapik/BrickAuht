@@ -245,8 +245,13 @@ void DefferedRenderer::gBufferRender(std::vector<GameEntity*>* gameEntitys, std:
 	ID3D11RenderTargetView* RTViews[3] = { AlbedoRTV, NormalRTV, PositionRTV };
 
 	context->OMSetRenderTargets(3, RTViews, depthStencilView);
+	
+	//OUR SCENE NEEDS AT LEAST ONE DIRECTIONAL LIGHT TO LOOK GOOD
+	if (directionalLights->size() <= 0)
+		throw "Scene needs at least 1 directional light";
+
 	// RENDER NORMALLY NOW
-	DrawMultipleMaterials(gameEntitys);
+	DrawMultipleMaterials(gameEntitys, &directionalLights->at(0));
 }
 
 
@@ -351,47 +356,7 @@ void DefferedRenderer::directionalLightRender(std::vector<SceneDirectionalLight>
 	return;
 }
 
-
-/*
-void DefferedRenderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys)
-{
-	SimpleVertexShader* vertexShader = GetVertexShader("gBuffer");
-	SimplePixelShader* pixelShader = GetPixelShader("gBuffer");
-	vertexShader->SetShader();
-	pixelShader->SetShader();
-
-	if (gameEntitys->size() == 0) return;
-	Material* material = GetMaterial(gameEntitys->at(0)->GetMaterial());
-
-	// Send texture Info
-	pixelShader->SetSamplerState("basicSampler", material->GetSamplerState());
-	pixelShader->SetShaderResourceView("diffuseTexture", material->GetSRV());
-	//pixelShader->SetShaderResourceView("NormalMap", material->GetNormMap());
-	pixelShader->CopyAllBufferData();
-
-	// Send Geometry
-	vertexShader->SetMatrix4x4("view", *camera->GetView());
-	vertexShader->SetMatrix4x4("projection", *camera->GetProjection());
-	//pixelShader->SetFloat3("cameraPosition", *camera->GetPosition());  NOT CURRENTLY USED
-
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
-	Mesh* meshTmp;
-	for (int i = 0; i < gameEntitys->size(); i++) {
-		vertexShader->SetMatrix4x4("world", *gameEntitys->at(i)->GetWorld());
-		vertexShader->CopyAllBufferData();
-
-		meshTmp = GetMesh(gameEntitys->at(i)->GetMesh());
-		ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
-		context->IASetVertexBuffers(0, 1, &vertTemp, &stride, &offset);
-		context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-		context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
-	}
-
-}
-*/
-
-void DefferedRenderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys)
+void DefferedRenderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, SceneDirectionalLight* firstDirectionalLight)
 {
 	SimpleVertexShader* vertexShader = GetVertexShader("gBuffer");
 	SimplePixelShader* pixelShader = GetPixelShader("gBuffer");
@@ -413,6 +378,12 @@ void DefferedRenderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntit
 
 	ID3D11BlendState* blendState;
 	device->CreateBlendState(&bd, &blendState);
+
+	//Do shadow stuff!
+	vertexShader->SetMatrix4x4("shadowView", firstDirectionalLight->ViewMatrix);
+	vertexShader->SetMatrix4x4("shadowProjection", shadowDirectionalProjectionMatrix);
+	pixelShader->SetShaderResourceView("ShadowMap", shadowSRV);
+	pixelShader->SetSamplerState("ShadowSampler", GetSampler("shadow"));
 
 	for (int i = 0; i < gameEntitys->size(); i++)
 	{

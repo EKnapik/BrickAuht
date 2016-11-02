@@ -5,6 +5,9 @@ cbuffer externalData : register(b0)
 	matrix world;
 	matrix view;
 	matrix projection;
+
+	matrix shadowView;
+	matrix shadowProjection;
 };
 
 // Struct representing a single vertex worth of data
@@ -23,6 +26,7 @@ struct VertexToPixel
 	float3 normal		: NORMAL;
 	float3 tangent		: TANGENT;
 	float2 uv			: TEXCOORD0;
+	float4 posForShadow	: TEXCOORD1;
 };
 
 // --------------------------------------------------------
@@ -53,6 +57,9 @@ VertexToPixel main( VertexShaderInput input )
 	// This github uses depth then recalculates the world position, so the buffer is smaller
 	// and slightly more acurate because you have more values
 	// (https://github.com/oks2024/DeferredRendering/blob/master/DeferredRendering/RenderGBufferVertexShader.hlsl)
+
+	matrix shadowWVP = mul(mul(world, shadowView), shadowProjection);
+	output.posForShadow = mul(float4(input.position, 1), shadowWVP);
 
 	return output;
 }
