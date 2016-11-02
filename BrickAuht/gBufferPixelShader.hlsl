@@ -39,10 +39,10 @@ GBufferOutput main(VertexToPixel input) : SV_TARGET
 	input.tangent = normalize(input.tangent);
 	
 	// Normal Mapping
-	// float3 normalFromMap = NormalMap.Sample(Sampler, input.uv).rgb * 2 - 1;
-	// float3 T = normalize(input.tangent - input.normal * dot(input.tangent, input.normal));
-	// float3x3 TBN = float3x3(T, cross(T, input.normal), input.normal);
-	// input.normal = normalize(mul(normalFromMap, TBN));
+	/*float3 normalFromMap = NormalMap.Sample(basicSampler, input.uv).rgb * 2 - 1;
+	float3 T = normalize(input.tangent - input.normal * dot(input.tangent, input.normal));
+	float3x3 TBN = float3x3(T, cross(T, input.normal), input.normal);
+	input.normal = normalize(mul(normalFromMap, TBN));*/
 	GBufferOutput output;
 
 	float3 toCamera = normalize(cameraPosition - input.worldPos);;
@@ -78,7 +78,7 @@ GBufferOutput main(VertexToPixel input) : SV_TARGET
 	// Sample the shadow map
 	float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, depthFromLight);
 
-	output.Color = output.Color * shadowAmount;
+	output.Color = output.Color * (shadowAmount + 0.3f);
 
 	return output;
 }

@@ -404,7 +404,7 @@ void DefferedRenderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntit
 		// Send texture Info
 		pixelShader->SetSamplerState("basicSampler", material->GetSamplerState());
 		pixelShader->SetShaderResourceView("diffuseTexture", material->GetSRV());
-		//pixelShader->SetShaderResourceView("NormalMap", material->GetNormMap());
+		//pixelShader->SetShaderResourceView("NormalMap", material->GetSRV());
 
 		// Send Geometry
 		vertexShader->SetMatrix4x4("view", *camera->GetView());

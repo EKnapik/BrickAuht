@@ -532,7 +532,7 @@ void Renderer::SetUpShadows()
 
 	// Orthographic to match the directional light
 	//TODO: This shouldn't call direct X math stuff directly. Fix that
-	XMMATRIX shProj = XMMatrixOrthographicLH(10, 10, 0.1f, 100.0f);
+	XMMATRIX shProj = XMMatrixOrthographicLH(30, 30, 0.1f, 100.0f);
 	XMStoreFloat4x4(&shadowDirectionalProjectionMatrix, XMMatrixTranspose(shProj));
 
 	XMMATRIX shProjPersp = XMMatrixPerspectiveLH(10, 10, 0.1f, 100.0f);

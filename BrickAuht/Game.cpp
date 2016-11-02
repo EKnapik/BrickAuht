@@ -106,6 +106,7 @@ void Game::LoadMeshes()
 	renderer->AddMesh("helix", "Assets/helix.obj");
 	renderer->AddMesh("sphere", "Assets/sphere.obj");
 	renderer->AddMesh("torus", "Assets/torus.obj");
+	renderer->AddMesh("court", "Assets/Court.obj");
 	// full screen quad mesh
 	renderer->AddMesh("quad", new Mesh(device));
 	//renderer->AddMesh("paddle", "Assets/paddle.obj");
@@ -118,6 +119,7 @@ void Game::LoadMaterials()
 	renderer->AddMaterial("greenopaque", L"Assets/Textures/GreenOpaque.png");
 	renderer->GetMaterial("greenopaque")->transparency = true;
 	renderer->AddMaterial("gridclip", L"Assets/Textures/GridClip.png");
+	renderer->AddMaterial("white", L"Assets/Textures/White.png");
 
 	renderer->AddCubeMaterial("skybox", L"Assets/Textures/SunnyCubeMap.dds");
 }

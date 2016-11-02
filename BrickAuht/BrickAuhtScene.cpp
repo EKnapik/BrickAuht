@@ -3,59 +3,73 @@
 
 BrickAuhtScene::BrickAuhtScene()
 {
-	{
-		GameEntity* temp = new GameEntity("sphere", "electricity");
-
-		Ball* ball = new Ball();
-		ball->SetEntity(temp);
-		ball->kinematics->velocity = VEC3(0, 1, 5);
-		ball->kinematics->acceleration = VEC3(0, 0, 0);
-		ball->kinematics->SetPosition(VEC3(0, 0, 0));
-		balls.push_back(ball);
-		GameObjects.push_back(ball);
-	}
 	for (int x = 0; x < 5; x++)
 	{
 		for (int y = 0; y < 5; y++)
 		{
-			GameEntity* temp = new GameEntity("cube", "greenopaque");
+			GameEntity* temp = new GameEntity("cube", "default");
 
 			Ball* ball = new Ball();
 			ball->SetEntity(temp);
 			ball->kinematics->velocity = VEC3(0, 0, 0);
 			ball->kinematics->acceleration = VEC3(0, 0, 0);
-			ball->kinematics->SetPosition(VEC3(x - 2.5f, y - 2.5f, 5));
+			ball->kinematics->SetPosition(VEC3(x - 2.5f, y - 2.5f, 20));
 			blocks.push_back(ball);
 			GameObjects.push_back(ball);
 		}
 	}
 
-	GameEntity* cubeBox = new GameEntity("cube", "default");
-	cubeBox->SetScale(VEC3(10, 10, 10));
-	GameObject* cubeObject = new GameObject();
-	cubeObject->SetEntity(cubeBox);
-	cubeBox->SetPosition(VEC3(0, -8.0f, 0));
-	GameObjects.push_back(cubeObject);
+	GameEntity* BallEntity = new GameEntity("sphere", "white");
+	this->ball = new Ball();
+	this->ball->SetEntity(BallEntity);
+	this->ball->kinematics->velocity = VEC3(0, 0, 5);
+	this->ball->kinematics->acceleration = VEC3(0, -2.0f, 0);
+	this->ball->kinematics->SetPosition(VEC3(0, 5.0f, 0));
+	GameObjects.push_back(this->ball);
+
+	GameEntity* cubeBox = new GameEntity("court", "white");
+	cubeBox->SetScale(VEC3(2, 2, 2));
+	cubeBox->SetRotation(VEC3(0, PI, 0));
+	court = new GameObject();
+	court->SetEntity(cubeBox);
+	cubeBox->SetPosition(VEC3(0, -1.0f, 0));
+	GameObjects.push_back(court);
 
 	GameEntity* temp = new GameEntity("cube", "greenopaque");
 	paddle = new Ball();
 	paddle->SetEntity(temp);
 	paddle->kinematics->SetPosition(VEC3(0, 0, -4.5f));
-	balls.push_back(paddle);
 	GameObjects.push_back(paddle);
 
-	PointLights.push_back(ScenePointLight(
-		VEC4(253.0f / 255.0f, 184.0f / 255.0f, 19.0f / 255.0f, 1.0f),
-		VEC3(0, 0, -2), 10.0));
+	for (int i = 0; i < 6; i++)
+	{
+		PointLights.push_back(ScenePointLight(
+			VEC4(1.0f, 1.0f, 1.0f, 1.0f),
+			VEC3(-5, 5, i * 3), 3.0));
 
-	PointLights.push_back(ScenePointLight(
-		VEC4(0.9, 0.0, 0.0, 1.0f),
-		VEC3(2, 0, 0), 10.0));
+		PointLights.push_back(ScenePointLight(
+			VEC4(1.0f, 1.0f, 1.0f, 1.0f),
+			VEC3(5, 5, i * 3), 3.0));
+	}
+	playerLight = new ScenePointLight(
+		VEC4(1.0f, 0, 0, 1.0f),
+		VEC3(0, 0, 0), 3.0);
+	PointLights.push_back(*playerLight);
+
+	ballLight = new ScenePointLight(
+		VEC4(0, 1.0f, 0, 1.0f),
+		VEC3(0, 0, 0), 3.0);
+	PointLights.push_back(*ballLight);
+
+	//Big light to light the main court
+	/*PointLights.push_back(ScenePointLight(
+		VEC4(0.3f, 0.5f, 0.3f, 1.0f),
+		VEC3(0, 10, 20), 20.0f));*/
 
 	DirectionalLights.push_back(SceneDirectionalLight(
 		VEC4(0.1f, 0.1f, 0.1f, 1.0f),
-		VEC4(71.0f / 255.0f, 28.0f / 255.0f, 1.0f / 255.0f, 1.0f),
-		VEC3(0, 20, -20)));
+		VEC4(1.0f, 1.0f, 1.0f, 1.0f),
+		VEC3(0, 5, -10)));
 }
 
 void BrickAuhtScene::Initialize()
@@ -64,7 +78,7 @@ void BrickAuhtScene::Initialize()
 
 void BrickAuhtScene::Update()
 {
-	float paddleSpeed = 3;
+	float paddleSpeed = 5;
 	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
 	{
 		paddle->kinematics->velocity = VEC3(-paddleSpeed, paddle->kinematics->velocity.y, 0);
@@ -90,78 +104,87 @@ void BrickAuhtScene::Update()
 		paddle->kinematics->velocity = VEC3(paddle->kinematics->velocity.x, 0, 0);
 	}
 
-	// Let's add some logic to make the balls bounce off the walls.
-	for (int i = 0; i < balls.size(); i++)
+	playerLight->Position = paddle->kinematics->GetPosition();
+	ballLight->Position = ball->kinematics->GetPosition();
+
+	// Let's add some logic to make the ball bounce off the walls.
+	float length = 15.0f;
+	float width = 5.0f;
+	if (ball->kinematics->GetPosition().x > width)
 	{
-		float boxSize = 2.5f;
-		if (balls.at(i)->kinematics->GetPosition().x > boxSize)
+		ball->kinematics->velocity.x = abs(ball->kinematics->velocity.x) * -1;
+	}
+	if (ball->kinematics->GetPosition().x < -width)
+	{
+		ball->kinematics->velocity.x = abs(ball->kinematics->velocity.x);
+	}
+
+	/*if (ball->kinematics->GetPosition().y > boxSize)
+	{
+		ball->kinematics->velocity.y = abs(ball->kinematics->velocity.y) * -1;
+	}*/
+	if (ball->kinematics->GetPosition().y < 0.0f)
+	{
+		ball->kinematics->velocity.y = abs(ball->kinematics->velocity.y);
+	}
+	float wall = 5.0f;
+	if (ball->kinematics->GetPosition().z > length + wall)
+	{
+		ball->kinematics->velocity.z = abs(ball->kinematics->velocity.z) * -1;
+	}
+	if (ball->kinematics->GetPosition().z < wall)
+	{
+		ball->kinematics->velocity.z = abs(ball->kinematics->velocity.z);
+	}
+
+	VEC3 distanceVec;
+	GMath::AddVec3(&distanceVec, &ball->kinematics->GetPosition(),
+		(GMath::VectorScale(&GMath::GetVector(&paddle->kinematics->GetPosition()), -1.0f)));
+
+	FLOAT distance;
+	GMath::GetMagnitude(&distance, &distanceVec);
+
+	if (distance < ball->radius + paddle->radius)
+	{
+		GMath::Vec3Normalize(&GMath::GetVector(&distanceVec));
+		float velocityMag;
+		GMath::GetMagnitude(&velocityMag, &ball->kinematics->velocity);
+		GMath::SetVector3(&ball->kinematics->velocity, distanceVec.x, distanceVec.y, distanceVec.z);
+		GMath::VectorScale(&ball->kinematics->velocity, velocityMag);
+
+		GMath::GetMagnitude(&velocityMag, &paddle->kinematics->velocity);
+		GMath::SetVector3(&paddle->kinematics->velocity, distanceVec.x, distanceVec.y, distanceVec.z);
+		GMath::VectorScale(&paddle->kinematics->velocity, -velocityMag);
+	}
+
+
+	for (int p = 0; p < blocks.size(); p++)
+	{
+		VEC3 distanceVec;
+		GMath::AddVec3(&distanceVec, &ball->kinematics->GetPosition(),
+			(GMath::VectorScale(&GMath::GetVector(&blocks.at(p)->kinematics->GetPosition()), -1.0f)));
+
+		FLOAT distance;
+		GMath::GetMagnitude(&distance, &distanceVec);
+
+		if (distance < ball->radius + blocks.at(p)->radius)
 		{
-			balls.at(i)->kinematics->velocity.x = abs(balls.at(i)->kinematics->velocity.x) * -1;
-		}
-		if (balls.at(i)->kinematics->GetPosition().x < -boxSize)
-		{
-			balls.at(i)->kinematics->velocity.x = abs(balls.at(i)->kinematics->velocity.x);
-		}
+			GMath::Vec3Normalize(&GMath::GetVector(&distanceVec));
+			float velocityMag;
+			GMath::GetMagnitude(&velocityMag, &ball->kinematics->velocity);
+			GMath::SetVector3(&ball->kinematics->velocity, distanceVec.x, distanceVec.y, distanceVec.z);
+			GMath::VectorScale(&ball->kinematics->velocity, velocityMag);
 
-		if (balls.at(i)->kinematics->GetPosition().y > boxSize)
-		{
-			balls.at(i)->kinematics->velocity.y = abs(balls.at(i)->kinematics->velocity.y) * -1;
-		}
-		if (balls.at(i)->kinematics->GetPosition().y < -boxSize)
-		{
-			balls.at(i)->kinematics->velocity.y = abs(balls.at(i)->kinematics->velocity.y);
-		}
-
-		if (balls.at(i)->kinematics->GetPosition().z > boxSize * 2)
-		{
-			balls.at(i)->kinematics->velocity.z = abs(balls.at(i)->kinematics->velocity.z) * -1;
-		}
-
-		for (int p = i + 1; p < balls.size(); p++)
-		{
-			VEC3 distanceVec;
-			GMath::AddVec3(&distanceVec, &balls.at(i)->kinematics->GetPosition(),
-				(GMath::VectorScale(&GMath::GetVector(&balls.at(p)->kinematics->GetPosition()), -1.0f)));
-
-			FLOAT distance;
-			GMath::GetMagnitude(&distance, &distanceVec);
-
-			if (distance < balls.at(i)->radius + balls.at(p)->radius)
-			{
-				GMath::Vec3Normalize(&GMath::GetVector(&distanceVec));
-				float velocityMag;
-				GMath::GetMagnitude(&velocityMag, &balls.at(i)->kinematics->velocity);
-				GMath::SetVector3(&balls.at(i)->kinematics->velocity, distanceVec.x, distanceVec.y, distanceVec.z);
-				GMath::VectorScale(&balls.at(i)->kinematics->velocity, velocityMag);
-
-				GMath::GetMagnitude(&velocityMag, &balls.at(p)->kinematics->velocity);
-				GMath::SetVector3(&balls.at(p)->kinematics->velocity, distanceVec.x, distanceVec.y, distanceVec.z);
-				GMath::VectorScale(&balls.at(p)->kinematics->velocity, -velocityMag);
-			}
-
-		}
-		for (int p = i + 1; p < blocks.size(); p++)
-		{
-			VEC3 distanceVec;
-			GMath::AddVec3(&distanceVec, &balls.at(i)->kinematics->GetPosition(),
-				(GMath::VectorScale(&GMath::GetVector(&blocks.at(p)->kinematics->GetPosition()), -1.0f)));
-
-			FLOAT distance;
-			GMath::GetMagnitude(&distance, &distanceVec);
-
-			if (distance < balls.at(i)->radius + blocks.at(p)->radius)
-			{
-				GMath::Vec3Normalize(&GMath::GetVector(&distanceVec));
-				float velocityMag;
-				GMath::GetMagnitude(&velocityMag, &balls.at(i)->kinematics->velocity);
-				GMath::SetVector3(&balls.at(i)->kinematics->velocity, distanceVec.x, distanceVec.y, distanceVec.z);
-				GMath::VectorScale(&balls.at(i)->kinematics->velocity, velocityMag);
-
-				blocks.at(p)->ToDelete = true;
-				blocks.erase(blocks.begin() + p);
-				p--;
-			}
-
+			blocks.at(p)->ToDelete = true;
+			blocks.erase(blocks.begin() + p);
+			p--;
 		}
 	}
 }
+
+BrickAuhtScene::~BrickAuhtScene()
+{
+	delete playerLight;
+	delete ballLight;
+}
+
