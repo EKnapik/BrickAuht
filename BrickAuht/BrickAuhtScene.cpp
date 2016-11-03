@@ -13,7 +13,7 @@ BrickAuhtScene::BrickAuhtScene()
 			ball->SetEntity(temp);
 			ball->kinematics->velocity = VEC3(0, 0, 0);
 			ball->kinematics->acceleration = VEC3(0, 0, 0);
-			ball->kinematics->SetPosition(VEC3(x - 2.5f, y - 2.5f, 20));
+			ball->kinematics->SetPosition(VEC3(x - 2.5f, y, 20));
 			blocks.push_back(ball);
 			GameObjects.push_back(ball);
 		}
