@@ -308,6 +308,9 @@ void DefferedRenderer::pointLightRender(std::vector<ScenePointLight>* pointLight
 	}
 
 	// RESET STATES
+	pixelShader->SetShaderResourceView("gAlbedo", 0);
+	pixelShader->SetShaderResourceView("gNormal", 0);
+	pixelShader->SetShaderResourceView("gPosition", 0);
 	context->OMSetBlendState(0, factors, 0xFFFFFFFF);
 	context->RSSetState(0);
 	return;
@@ -352,6 +355,9 @@ void DefferedRenderer::directionalLightRender(std::vector<SceneDirectionalLight>
 	}
 
 	// RESET STATES
+	pixelShader->SetShaderResourceView("gAlbedo", 0);
+	pixelShader->SetShaderResourceView("gNormal", 0);
+	pixelShader->SetShaderResourceView("gPosition", 0);
 	context->OMSetBlendState(0, factors, 0xFFFFFFFF);
 	context->RSSetState(0);
 	return;
