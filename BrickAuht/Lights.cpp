@@ -18,5 +18,6 @@ ScenePointLight::ScenePointLight(VEC4 color, VEC3 position, float radius)
 {
 	Color = color;
 	Position = position;
+	// Multiple by 2 so the radius of sphere for light looks good
 	Radius = VEC3(radius * 2, radius * 2, radius * 2);
 }

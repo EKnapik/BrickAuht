@@ -31,7 +31,7 @@ struct VertexToPixel
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	// return float4(1.0, 1.0, 1.0, 1.0);
+	float3 gWorldPos = gPosition.Sample(basicSampler, input.uv).xyz;
 	// need to unpack normal
 	float3 normal = (gNormal.Sample(basicSampler, input.uv).xyz * 2.0f) - 1.0f;
 	float4 surfaceColor = gAlbedo.Sample(basicSampler, input.uv);
@@ -44,5 +44,10 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 dirToLight = normalize(dirLight.Direction);
 	float dirLightAmount = saturate(dot(normal, dirToLight));
 
-	return (dirLight.AmbientColor) + (dirLight.DiffuseColor * dirLightAmount * surfaceColor);
+	// specular
+	float3 toCamera = normalize(cameraPosition - gWorldPos);
+	float3 refl = reflect(-dirToLight, normal);
+	float spec = pow(max(dot(refl, toCamera), 0), 200);
+
+	return (dirLight.AmbientColor) + (dirLight.DiffuseColor * dirLightAmount * surfaceColor) + spec;
 }

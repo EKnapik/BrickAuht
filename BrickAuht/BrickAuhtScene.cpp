@@ -44,12 +44,12 @@ BrickAuhtScene::BrickAuhtScene()
 	for (int i = 0; i < 6; i++)
 	{
 		PointLights.push_back(ScenePointLight(
-			VEC4(1.0f, 1.0f, 1.0f, 1.0f),
-			VEC3(-5, 5, i * 3), 3.0));
+			VEC4(1.0f, 0.2f, 0.2f, 1.0f),
+			VEC3(-5, 5, i * 3), 5.0));
 
 		PointLights.push_back(ScenePointLight(
-			VEC4(1.0f, 1.0f, 1.0f, 1.0f),
-			VEC3(5, 5, i * 3), 3.0));
+			VEC4(0.2f, 0.2f, 1.0f, 1.0f),
+			VEC3(5, 5, i * 3), 5.0));
 	}
 	playerLight = new ScenePointLight(
 		VEC4(1.0f, 0, 0, 1.0f),

@@ -55,15 +55,11 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float dist = length(pointLight.Position.xyz - gWorldPos);
 	pointLightAmount = pointLightAmount / pow(((dist / pointLight.Radius) + 1), 2);
 
-	// specular
-	float3 toCamera = normalize(cameraPosition - gWorldPos);
-	float3 refl = reflect(-dirToLight, normal);
-	float spec = pow(max(dot(refl, toCamera), 0), 200);
+	// specular CHOOSING TO NOT DO SPECULAR
+	// float3 toCamera = normalize(cameraPosition - gWorldPos);
+	// float3 refl = reflect(-dirToLight, normal);
+	// float spec = pow(max(dot(refl, toCamera), 0), 200);
 
-
-	//return gPosition.Sample(basicSampler, gUV);
-
-	return float4(((pointLight.Color.xyz * pointLightAmount * surfaceColor.xyz) +
-		spec), surfaceColor.a);
+	return float4((pointLight.Color.xyz * pointLightAmount * surfaceColor.xyz), surfaceColor.a);
 	return float4(0, 0, 0, 0);
 }
