@@ -10,6 +10,7 @@ void GameManager::Update(float dt)
 			delete GameObjects->at(i);
 			GameObjects->erase(GameObjects->begin() + i);
 			i--;
+			continue;
 		}
 		GameObjects->at(i)->Update(dt);
 		std::vector<Component*>* objectComponents = &GameObjects->at(i)->components;
