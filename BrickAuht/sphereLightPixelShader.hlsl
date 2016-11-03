@@ -53,6 +53,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float pointLightAmount = saturate(dot(normal, dirToLight));
 	// Light Attenuation f = 1 / ((d/r) + 1)^2
 	float dist = length(pointLight.Position.xyz - gWorldPos);
+	clip(pointLight.Radius - dist);
 	pointLightAmount = pointLightAmount / pow(((dist / pointLight.Radius) + 1), 2);
 
 	// specular CHOOSING TO NOT DO SPECULAR

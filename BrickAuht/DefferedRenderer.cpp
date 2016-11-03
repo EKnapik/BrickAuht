@@ -293,7 +293,7 @@ void DefferedRenderer::pointLightRender(std::vector<ScenePointLight>* pointLight
 		light.Color = pointLights->at(i).Color;
 		light.Position = pointLights->at(i).Position;
 		// divide by 10 so attenuation looks good
-		light.Radius = pointLights->at(i).Radius.x/9;
+		light.Radius = pointLights->at(i).Radius.x;
 		pixelShader->SetData("pointLight", &light, sizeof(PointLight));
 
 		GMath::SetTransposeMatrix(&world, &(GMath::CreateScaleMatrix(&pointLights->at(i).Radius) * GMath::CreateTranslationMatrix(&pointLights->at(i).Position)));
