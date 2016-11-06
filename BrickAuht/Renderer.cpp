@@ -47,6 +47,11 @@ Renderer::~Renderer()
 		delete iterator->second;
 	}
 
+	typedef std::map<std::string, SimpleGeometryShader*>::iterator geometry_type;
+	for (geometry_type iterator = GeometryShaderDictionary.begin(); iterator != GeometryShaderDictionary.end(); iterator++) {
+		delete iterator->second;
+	}
+
 	typedef std::map<std::string, ID3D11SamplerState*>::iterator sampler_type;
 	for (sampler_type iterator = SamplerDictionary.begin(); iterator != SamplerDictionary.end(); iterator++) {
 		iterator->second->Release();
@@ -454,6 +459,30 @@ void Renderer::AddPixelShader(std::string name, std::wstring path)
 	PixelShaderDictionary.insert(std::pair<std::string, SimplePixelShader*>(name, pixelShader));
 }
 
+void Renderer::AddGeometryShader(std::string name, std::wstring path)
+{
+	std::wstring debug = L"Debug/";
+	debug += path;
+	SimpleGeometryShader* geometryShader = new SimpleGeometryShader(device, context);
+	if (!geometryShader->LoadShaderFile(debug.c_str()))
+	{
+		geometryShader->LoadShaderFile(path.c_str());
+	}
+	GeometryShaderDictionary.insert(std::pair<std::string, SimpleGeometryShader*>(name, geometryShader));
+}
+
+void Renderer::AddGeometryShader(std::string name, std::wstring path, bool useStreamOut, bool allowStreamOutRasterization)
+{
+	std::wstring debug = L"Debug/";
+	debug += path;
+	SimpleGeometryShader* geometryShader = new SimpleGeometryShader(device, context, useStreamOut, allowStreamOutRasterization);
+	if (!geometryShader->LoadShaderFile(debug.c_str()))
+	{
+		geometryShader->LoadShaderFile(path.c_str());
+	}
+	GeometryShaderDictionary.insert(std::pair<std::string, SimpleGeometryShader*>(name, geometryShader));
+}
+
 void Renderer::AddSampler(std::string name, D3D11_SAMPLER_DESC * sampleDesc)
 {
 	ID3D11SamplerState* samplerState;
@@ -557,5 +586,10 @@ SimpleVertexShader * Renderer::GetVertexShader(std::string name)
 SimplePixelShader * Renderer::GetPixelShader(std::string name)
 {
 	return PixelShaderDictionary.at(name);
+}
+
+SimpleGeometryShader * Renderer::GetGeometryShader(std::string name)
+{
+	return GeometryShaderDictionary.at(name);
 }
 

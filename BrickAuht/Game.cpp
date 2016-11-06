@@ -40,7 +40,10 @@ Game::~Game()
 {
 	// Release any (and all!) DirectX objects
 	// we've made in the Game class
-
+	particleTexture->Release();
+	particleBlendState->Release();
+	particleDepthState->Release();
+	delete emitter;
 	delete renderer;
 	delete camera;
 }
@@ -71,6 +74,39 @@ void Game::Init()
 
 	gameManager.SetActiveScene(new BrickAuhtScene());
 	renderer->SetSkyBox("skybox");
+
+	// Blend state
+	D3D11_BLEND_DESC blendDesc = {};
+	blendDesc.AlphaToCoverageEnable = false;
+	blendDesc.IndependentBlendEnable = false;
+	blendDesc.RenderTarget[0].BlendEnable = true;
+	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	device->CreateBlendState(&blendDesc, &particleBlendState);
+
+	// Depth state
+	D3D11_DEPTH_STENCIL_DESC depthDesc = {};
+	depthDesc.DepthEnable = true;
+	depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	device->CreateDepthStencilState(&depthDesc, &particleDepthState);
+
+	emitter = new ParticleEmitter(
+		device,
+		renderer->GetVertexShader("particle"),
+		renderer->GetPixelShader("particle"),
+		renderer->GetGeometryShader("particle"),
+		renderer->GetVertexShader("spawn"),
+		renderer->GetGeometryShader("spawn"),
+		particleTexture,
+		renderer->GetSampler("default"),
+		particleBlendState,
+		particleDepthState);
 }
 
 // --------------------------------------------------------
@@ -92,6 +128,13 @@ void Game::LoadShaders()
 	renderer->AddVertexShader("quad", L"quadVertexShader.cso");
 	renderer->AddPixelShader("quad", L"quadPixelShader.cso");
 	renderer->AddPixelShader("sphereLight", L"sphereLightPixelShader.cso");
+
+	// Create shaders for Particle Systems
+	renderer->AddPixelShader("particle", L"ParticlePS.cso");
+	renderer->AddVertexShader("particle", L"ParticleVS.cso");
+	renderer->AddGeometryShader("particle", L"ParticleGS.cso");
+	renderer->AddGeometryShader("spawn", L"SpawnGS.cso", true, false);
+	renderer->AddVertexShader("spawn", L"SpawnVS.cso");
 }
 
 
@@ -122,6 +165,9 @@ void Game::LoadMaterials()
 	renderer->AddMaterial("white", L"Assets/Textures/White.png");
 
 	renderer->AddCubeMaterial("skybox", L"Assets/Textures/SunnyCubeMap.dds");
+
+	//TODO: This should be loaded as a material, the particle System shouldn't care
+	CreateWICTextureFromFile(device, context, L"Assets/Textures/GridClip.png", 0, &particleTexture);
 }
 
 
@@ -189,6 +235,14 @@ void Game::Draw(float deltaTime, float totalTime)
 	//renderer->DrawMultipleMaterials(&gameManager.GameEntities, deltaTime, totalTime);
 	//renderer->DrawMultipleMaterials(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights(), deltaTime, totalTime);
 	//renderer->DrawSkyBox();
+
+	context->ClearDepthStencilView(
+		depthStencilView,
+		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
+		1.0f,
+		0);
+	
+	emitter->Draw(context, camera, deltaTime, totalTime);
 	
 	swapChain->Present(0, 0);
 }

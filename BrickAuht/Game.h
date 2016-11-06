@@ -17,6 +17,8 @@
 #include "GameManager.h"
 #include "Renderer.h"
 
+#include "ParticleEmitter.h"
+
 class Game 
 	: public DXCore
 {
@@ -50,6 +52,11 @@ private:
 
 	GameManager gameManager;
 	Renderer* renderer;
+
+	ParticleEmitter* emitter;
+	ID3D11ShaderResourceView* particleTexture;
+	ID3D11BlendState* particleBlendState;
+	ID3D11DepthStencilState* particleDepthState;
 
 	// Keeps track of the old mouse position.  Useful for 
 	// determining how far the mouse moved in a single frame.
