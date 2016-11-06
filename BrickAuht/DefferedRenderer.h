@@ -8,17 +8,15 @@ public:
 	DefferedRenderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* device,
 		ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView, int width, int height);
 	virtual ~DefferedRenderer();
-	void Render(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime);
+	void Render(FLOAT deltaTime, FLOAT totalTime);
 	
 
 private:
 
-	void gBufferRender(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights,
-					std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime);
-	void pointLightRender(std::vector<ScenePointLight>* pointLights);
-	void directionalLightRender(std::vector<SceneDirectionalLight>* dirLights);
-	//void DrawOneMaterial(std::vector<GameEntity*>* gameEntitys);
-	void DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, SceneDirectionalLight* firstDirectionalLight);
+	void gBufferRender(FLOAT deltaTime, FLOAT totalTime);
+	void pointLightRender();
+	void directionalLightRender();
+	void DrawMultipleMaterials();
 
 	// Albedo
 	ID3D11RenderTargetView *	AlbedoRTV;

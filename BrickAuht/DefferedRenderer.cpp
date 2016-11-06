@@ -211,8 +211,7 @@ DefferedRenderer::~DefferedRenderer()
 }
 
 
-void DefferedRenderer::Render(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights,
-					std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime)
+void DefferedRenderer::Render(FLOAT deltaTime, FLOAT totalTime)
 {
 	// Background color (Cornflower Blue)
 	const float clearColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
@@ -230,17 +229,19 @@ void DefferedRenderer::Render(std::vector<GameEntity*>* gameEntitys, std::vector
 		1.0f,
 		0);
 
-	gBufferRender(gameEntitys, directionalLights, pointLights, deltaTime, totalTime);
+	//TODO: This is not the right place to draw particle systems
+	DrawParticleEmitters(deltaTime, totalTime);
+
+	gBufferRender(deltaTime, totalTime);
 	context->OMSetRenderTargets(1, &backBufferRTV, 0);
-	pointLightRender(pointLights);
+	pointLightRender();
 	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
-	directionalLightRender(directionalLights);
+	directionalLightRender();
 	DrawSkyBox();
 }
 
 
-void DefferedRenderer::gBufferRender(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights,
-					std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime)
+void DefferedRenderer::gBufferRender(FLOAT deltaTime, FLOAT totalTime)
 {
 	ID3D11RenderTargetView* RTViews[3] = { AlbedoRTV, NormalRTV, PositionRTV };
 
@@ -251,13 +252,13 @@ void DefferedRenderer::gBufferRender(std::vector<GameEntity*>* gameEntitys, std:
 		throw "Scene needs at least 1 directional light";
 
 	// RENDER NORMALLY NOW
-	DrawMultipleMaterials(gameEntitys, &directionalLights->at(0));
+	DrawMultipleMaterials();
 }
 
 
 
 /// Only Render Sphere Lights
-void DefferedRenderer::pointLightRender(std::vector<ScenePointLight>* pointLights)
+void DefferedRenderer::pointLightRender()
 {
 	float factors[4] = { 1,1,1,1 };
 	context->OMSetBlendState(blendState, factors, 0xFFFFFFFF);
@@ -317,7 +318,7 @@ void DefferedRenderer::pointLightRender(std::vector<ScenePointLight>* pointLight
 }
 
 
-void DefferedRenderer::directionalLightRender(std::vector<SceneDirectionalLight>* dirLights) {
+void DefferedRenderer::directionalLightRender() {
 	float factors[4] = { 1,1,1,1 };
 	context->OMSetBlendState(blendState, factors, 0xFFFFFFFF);
 	
@@ -341,11 +342,11 @@ void DefferedRenderer::directionalLightRender(std::vector<SceneDirectionalLight>
 	ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
 	DirectionalLight light;
 	MAT4X4 world;
-	for (int i = 0; i < dirLights->size(); i++) {
+	for (int i = 0; i < directionalLights->size(); i++) {
 		// Send light info to pixel shader
-		light.AmbientColor = dirLights->at(i).AmbientColor;
-		light.DiffuseColor = dirLights->at(i).DiffuseColor;
-		light.Direction = dirLights->at(i).Direction;
+		light.AmbientColor = directionalLights->at(i).AmbientColor;
+		light.DiffuseColor = directionalLights->at(i).DiffuseColor;
+		light.Direction = directionalLights->at(i).Direction;
 		pixelShader->SetData("dirLight", &light, sizeof(DirectionalLight));
 		pixelShader->CopyAllBufferData();
 
@@ -363,7 +364,7 @@ void DefferedRenderer::directionalLightRender(std::vector<SceneDirectionalLight>
 	return;
 }
 
-void DefferedRenderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, SceneDirectionalLight* firstDirectionalLight)
+void DefferedRenderer::DrawMultipleMaterials()
 {
 	SimpleVertexShader* vertexShader = GetVertexShader("gBuffer");
 	SimplePixelShader* pixelShader = GetPixelShader("gBuffer");
@@ -387,6 +388,7 @@ void DefferedRenderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntit
 	device->CreateBlendState(&bd, &blendState);
 
 	//Do shadow stuff!
+	SceneDirectionalLight* firstDirectionalLight = &directionalLights->at(0);
 	vertexShader->SetMatrix4x4("shadowView", firstDirectionalLight->ViewMatrix);
 	vertexShader->SetMatrix4x4("shadowProjection", shadowDirectionalProjectionMatrix);
 	pixelShader->SetShaderResourceView("ShadowMap", shadowSRV);

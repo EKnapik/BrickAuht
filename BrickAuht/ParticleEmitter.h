@@ -2,6 +2,9 @@
 #include "GameMath.h"
 #include "SimpleShader.h"
 #include "Camera.h"
+#include "Renderer.h"
+
+class Renderer;
 
 struct ParticleVertex
 {
@@ -17,26 +20,25 @@ struct ParticleVertex
 
 class ParticleEmitter {
 public:
+	void Init(Renderer* renderer);
+
 	ParticleEmitter(
-		ID3D11Device* device,
-		SimpleVertexShader* particleVS,
-		SimplePixelShader* particlePS,
-		SimpleGeometryShader* particleGS,
-		SimpleVertexShader* spawnVS,
-		SimpleGeometryShader* spawnGS,
-		ID3D11ShaderResourceView* texture,
-		ID3D11SamplerState* sampler,
-		ID3D11BlendState* particleBlendState,
-		ID3D11DepthStencilState* particleDepthState);
+		std::string particleVS,
+		std::string texture);
 
-	~ParticleEmitter();
+	virtual ~ParticleEmitter();
 
-	void Draw(ID3D11DeviceContext* context, Camera* camera, float deltaTime, float totalTime);
+	void Draw(Renderer* renderer, float deltaTime, float totalTime);
 
-private:
+	bool initialized = false;
+
+protected:
+	virtual void DrawParticles(Renderer* renderer, float deltaTime, float totalTime);
 	void SwapSOBuffers();
-	void DrawSpawn(ID3D11DeviceContext* context, float deltaTime, float totalTime);
+	void DrawSpawn(Renderer* renderer, float deltaTime, float totalTime);
 
+	std::string ParticleVS;
+	std::string Texture;
 
 	// Particle-related
 	ID3D11Buffer* particleVB;
@@ -52,24 +54,22 @@ private:
 	SimpleVertexShader* spawnVS;
 	SimpleGeometryShader* spawnGS;
 
-	ID3D11Texture1D* randomTexture;
-	ID3D11ShaderResourceView* randomSRV;
 	ID3D11ShaderResourceView* particleTexture;
 	ID3D11SamplerState* particleSampler;
 	ID3D11BlendState* particleBlendState;
 	ID3D11DepthStencilState* particleDepthState;
 
 	// Particle params
-	DirectX::XMFLOAT3 particleStartPosition;
-	DirectX::XMFLOAT3 particleStartVelocity;
-	DirectX::XMFLOAT4 particleStartColor;
-	DirectX::XMFLOAT4 particleMidColor;
-	DirectX::XMFLOAT4 particleEndColor;
+	VEC3 particleStartPosition;
+	VEC3 particleStartVelocity;
+	VEC4 particleStartColor;
+	VEC4 particleMidColor;
+	VEC4 particleEndColor;
 	float particleStartSize;
 	float particleMidSize;
 	float particleEndSize;
 
 	float particleAgeToSpawn;
 	float particleMaxLifetime;
-	DirectX::XMFLOAT3 particleConstantAccel;
+	VEC3 particleConstantAccel;
 };

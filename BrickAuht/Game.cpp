@@ -40,10 +40,6 @@ Game::~Game()
 {
 	// Release any (and all!) DirectX objects
 	// we've made in the Game class
-	particleTexture->Release();
-	particleBlendState->Release();
-	particleDepthState->Release();
-	delete emitter;
 	delete renderer;
 	delete camera;
 }
@@ -74,39 +70,6 @@ void Game::Init()
 
 	gameManager.SetActiveScene(new BrickAuhtScene());
 	renderer->SetSkyBox("skybox");
-
-	// Blend state
-	D3D11_BLEND_DESC blendDesc = {};
-	blendDesc.AlphaToCoverageEnable = false;
-	blendDesc.IndependentBlendEnable = false;
-	blendDesc.RenderTarget[0].BlendEnable = true;
-	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
-	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-	device->CreateBlendState(&blendDesc, &particleBlendState);
-
-	// Depth state
-	D3D11_DEPTH_STENCIL_DESC depthDesc = {};
-	depthDesc.DepthEnable = true;
-	depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
-	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-	device->CreateDepthStencilState(&depthDesc, &particleDepthState);
-
-	emitter = new ParticleEmitter(
-		device,
-		renderer->GetVertexShader("particle"),
-		renderer->GetPixelShader("particle"),
-		renderer->GetGeometryShader("particle"),
-		renderer->GetVertexShader("spawn"),
-		renderer->GetGeometryShader("spawn"),
-		particleTexture,
-		renderer->GetSampler("default"),
-		particleBlendState,
-		particleDepthState);
 }
 
 // --------------------------------------------------------
@@ -165,11 +128,7 @@ void Game::LoadMaterials()
 	renderer->AddMaterial("white", L"Assets/Textures/White.png");
 
 	renderer->AddCubeMaterial("skybox", L"Assets/Textures/SunnyCubeMap.dds");
-
-	//TODO: This should be loaded as a material, the particle System shouldn't care
-	CreateWICTextureFromFile(device, context, L"Assets/Textures/GridClip.png", 0, &particleTexture);
 }
-
 
 // --------------------------------------------------------
 // Handle resizing DirectX "stuff" to match the new window size.
@@ -222,6 +181,27 @@ void Game::Update(float deltaTime, float totalTime)
 			gameManager.SetActiveScene(new BouncingBallScene());
 		}
 	}
+
+	if (gameManager.EntitiesDirty)
+	{
+		gameManager.EntitiesDirty = false;
+		renderer->SetGameEntities(&gameManager.GameEntities);
+	}
+	if (gameManager.DirectionalLightsDirty)
+	{
+		gameManager.DirectionalLightsDirty = false;
+		renderer->SetDirectionalLights(gameManager.GetDirectionalLights());
+	}
+	if (gameManager.PointLightsDirty)
+	{
+		gameManager.PointLightsDirty = false;
+		renderer->SetPointLights(gameManager.GetPointLights());
+	}
+	if (gameManager.ParticleEmittersDirty)
+	{
+		gameManager.ParticleEmittersDirty = false;
+		renderer->SetParticleEmitters(gameManager.GetParticleEmitters());
+	}
 }
 
 // --------------------------------------------------------
@@ -229,20 +209,20 @@ void Game::Update(float deltaTime, float totalTime)
 // --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
-	renderer->RenderShadowMap(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights());
-	renderer->Render(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights(), deltaTime, totalTime);
+	renderer->RenderShadowMap();
+	renderer->Render(deltaTime, totalTime);
 	//renderer->DrawOneMaterial(&gameManager.GameEntities,  deltaTime, totalTime);
 	//renderer->DrawMultipleMaterials(&gameManager.GameEntities, deltaTime, totalTime);
 	//renderer->DrawMultipleMaterials(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights(), deltaTime, totalTime);
 	//renderer->DrawSkyBox();
 
-	context->ClearDepthStencilView(
+	/*context->ClearDepthStencilView(
 		depthStencilView,
 		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
 		1.0f,
 		0);
 	
-	emitter->Draw(context, camera, deltaTime, totalTime);
+	emitter->Draw(context, camera, deltaTime, totalTime);*/
 	
 	swapChain->Present(0, 0);
 }

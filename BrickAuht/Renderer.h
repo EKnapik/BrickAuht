@@ -6,8 +6,9 @@
 #include "GameEntity.h"
 #include "Camera.h"
 #include "Lights.h"
+#include "ParticleEmitter.h"
 
-
+class ParticleEmitter;
 
 class Renderer
 {
@@ -15,15 +16,17 @@ public:
 	Renderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* device, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView);
 	virtual ~Renderer();
 
-	void RenderShadowMap(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights);
+	void RenderShadowMap();
 
-	virtual void Render(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime) {};
+	virtual void Render(FLOAT deltaTime, FLOAT totalTime) {};
 
-	virtual void DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime);
+	virtual void DrawOneMaterial(FLOAT deltaTime, FLOAT totalTime);
 
-	void DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime);
+	void DrawMultipleMaterials(FLOAT deltaTime, FLOAT totalTime);
 
 	void DrawSkyBox();
+
+	void DrawParticleEmitters(FLOAT deltaTime, FLOAT totalTime);
 
 	void AddMesh(std::string name, Mesh* mesh);
 	void AddMesh(std::string name, std::string path);
@@ -58,21 +61,37 @@ public:
 
 	void SetSkyBox(std::string name);
 
+	ID3D11ShaderResourceView* GetRandomTexture() { return randomSRV; }
+
 	int width, height;
-
-protected:
-
-	void SetUpShadows();
 
 	Camera *camera;
 
 	ID3D11Device*			device;
 	ID3D11DeviceContext*	context;
+
+	void SetGameEntities(std::vector<GameEntity*>* gameEntitys) { this->gameEntitys = gameEntitys; }
+	void SetDirectionalLights(std::vector<SceneDirectionalLight>* directionalLights) { this->directionalLights = directionalLights; }
+	void SetPointLights(std::vector<ScenePointLight>* pointLights) { this->pointLights = pointLights; }
+	void SetParticleEmitters(std::vector<ParticleEmitter>* particleEmitters) { this->particleEmitters = particleEmitters; }
+
+protected:
+	void SetUpShadows();
+
+	void SetUpRandomTexture();
+
+	std::vector<GameEntity*>* gameEntitys;
+	std::vector<SceneDirectionalLight>* directionalLights;
+	std::vector<ScenePointLight>* pointLights;
+	std::vector<ParticleEmitter>* particleEmitters;
+
 	ID3D11RenderTargetView* backBufferRTV;
 	ID3D11DepthStencilView* depthStencilView;
 	ID3D11DepthStencilView* shadowDSV;
 	ID3D11ShaderResourceView* shadowSRV;
 	ID3D11RasterizerState* shadowRasterizer;
+	ID3D11Texture1D* randomTexture;
+	ID3D11ShaderResourceView* randomSRV;
 
 	std::map<std::string, Mesh*>				MeshDictionary;
 	std::map<std::string, Material*>			MaterialDictionary;

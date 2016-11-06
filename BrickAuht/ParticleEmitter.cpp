@@ -1,22 +1,37 @@
 #include "ParticleEmitter.h"
-#include <time.h>
 
 using namespace GMath;
 
-ParticleEmitter::ParticleEmitter(ID3D11Device * device, SimpleVertexShader * particleVS, SimplePixelShader * particlePS, SimpleGeometryShader * particleGS, SimpleVertexShader * spawnVS, SimpleGeometryShader * spawnGS, ID3D11ShaderResourceView * texture, ID3D11SamplerState * sampler, ID3D11BlendState * particleBlendState, ID3D11DepthStencilState * particleDepthState)
+void ParticleEmitter::Init(Renderer * renderer)
 {
-	particleTexture = texture;
-	particleSampler = sampler;
+	particleTexture = renderer->GetMaterial(Texture)->GetSRV();
+	particleSampler = renderer->GetSampler("default");
 
-	this->particleVS = particleVS;
-	this->particleGS = particleGS;
-	this->particlePS = particlePS;
+	this->particleVS = renderer->GetVertexShader(ParticleVS);
+	this->particleGS = renderer->GetGeometryShader("particle");
+	this->particlePS = renderer->GetPixelShader("particle");;
 
-	this->spawnVS = spawnVS;
-	this->spawnGS = spawnGS;
+	this->spawnVS = renderer->GetVertexShader("spawn");
+	this->spawnGS = renderer->GetGeometryShader("spawn");
 
-	this->particleBlendState = particleBlendState;
-	this->particleDepthState = particleDepthState;
+	D3D11_BLEND_DESC blendDesc = {};
+	blendDesc.AlphaToCoverageEnable = false;
+	blendDesc.IndependentBlendEnable = false;
+	blendDesc.RenderTarget[0].BlendEnable = true;
+	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	renderer->device->CreateBlendState(&blendDesc, &particleBlendState);
+
+	D3D11_DEPTH_STENCIL_DESC depthDesc = {};
+	depthDesc.DepthEnable = true;
+	depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	renderer->device->CreateDepthStencilState(&depthDesc, &particleDepthState);
 
 	// Particle setup
 	particleStartPosition = VEC3(2.0f, 0, 0);
@@ -57,68 +72,50 @@ ParticleEmitter::ParticleEmitter(ID3D11Device * device, SimpleVertexShader * par
 	vbd.StructureByteStride = 0;
 	D3D11_SUBRESOURCE_DATA initialVertexData;
 	initialVertexData.pSysMem = vertices;
-	device->CreateBuffer(&vbd, &initialVertexData, &particleVB);
-
-	// Set up "random" stuff -------------------------------------
-	unsigned int randomTextureWidth = 1024;
-
-	// Random data for the 1D texture
-	srand((unsigned int)time(0));
-	std::vector<float> data(randomTextureWidth * 4);
-	for (unsigned int i = 0; i < randomTextureWidth * 4; i++)
-		data[i] = rand() / (float)RAND_MAX * 2.0f - 1.0f;
-
-	// Set up texture
-	D3D11_TEXTURE1D_DESC textureDesc;
-	textureDesc.ArraySize = 1;
-	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	textureDesc.CPUAccessFlags = 0;
-	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	textureDesc.MipLevels = 1;
-	textureDesc.MiscFlags = 0;
-	textureDesc.Usage = D3D11_USAGE_DEFAULT;
-	textureDesc.Width = 100;
-
-	D3D11_SUBRESOURCE_DATA initData;
-	initData.pSysMem = (void*)&data[0];
-	initData.SysMemPitch = randomTextureWidth * sizeof(float) * 4;
-	initData.SysMemSlicePitch = 0;
-	device->CreateTexture1D(&textureDesc, &initData, &randomTexture);
-
-	// Set up SRV for texture
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-	srvDesc.Format = textureDesc.Format;
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1D;
-	srvDesc.Texture1D.MipLevels = 1;
-	srvDesc.Texture1D.MostDetailedMip = 0;
-	device->CreateShaderResourceView(randomTexture, &srvDesc, &randomSRV);
+	renderer->device->CreateBuffer(&vbd, &initialVertexData, &particleVB);
 
 	// Create SO buffers
 	spawnGS->CreateCompatibleStreamOutBuffer(&soBufferRead, 1000000);
 	spawnGS->CreateCompatibleStreamOutBuffer(&soBufferWrite, 1000000);
 	spawnFlip = false;
 	frameCount = 0;
+
+	initialized = true;
+}
+
+ParticleEmitter::ParticleEmitter(std::string particleVS, std::string texture)
+{
+	this->ParticleVS = particleVS;
+	this->Texture = texture;
+	initialized = false;
 }
 
 ParticleEmitter::~ParticleEmitter()
 {
-	particleVB->Release();
-	randomSRV->Release();
-	randomTexture->Release();
-	soBufferRead->Release();
-	soBufferWrite->Release();
+	if (initialized)
+	{
+		particleVB->Release();
+		soBufferRead->Release();
+		soBufferWrite->Release();
+		particleBlendState->Release();
+		particleDepthState->Release();
+	}
 }
 
-void ParticleEmitter::Draw(ID3D11DeviceContext * context, Camera * camera, float deltaTime, float totalTime)
+void ParticleEmitter::Draw(Renderer* renderer, float deltaTime, float totalTime)
 {
 	// Spawn particles
-	DrawSpawn(context, deltaTime, totalTime);
+	DrawSpawn(renderer, deltaTime, totalTime);
 
 	// Draw particles ----------------------------------------------------
+	DrawParticles(renderer, deltaTime, totalTime);
+}
 
+void ParticleEmitter::DrawParticles(Renderer* renderer, float deltaTime, float totalTime)
+{
 	particleGS->SetMatrix4x4("world", MAT4X4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)); // Identity
-	particleGS->SetMatrix4x4("view", *camera->GetView());
-	particleGS->SetMatrix4x4("projection", *camera->GetProjection());
+	particleGS->SetMatrix4x4("view", *renderer->camera->GetView());
+	particleGS->SetMatrix4x4("projection", *renderer->camera->GetProjection());
 	particleGS->CopyAllBufferData();
 
 	particleVS->SetFloat3("acceleration", particleConstantAccel);
@@ -135,25 +132,25 @@ void ParticleEmitter::Draw(ID3D11DeviceContext * context, Camera * camera, float
 
 	// Set up states
 	float factor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	context->OMSetBlendState(particleBlendState, factor, 0xffffffff);
-	context->OMSetDepthStencilState(particleDepthState, 0);
+	renderer->context->OMSetBlendState(particleBlendState, factor, 0xffffffff);
+	renderer->context->OMSetDepthStencilState(particleDepthState, 0);
 
 	// Set buffers
 	UINT particleStride = sizeof(ParticleVertex);
 	UINT particleOffset = 0;
-	context->IASetVertexBuffers(0, 1, &soBufferRead, &particleStride, &particleOffset);
+	renderer->context->IASetVertexBuffers(0, 1, &soBufferRead, &particleStride, &particleOffset);
 
 	// Draw auto - draws based on current stream out buffer
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-	context->DrawAuto();
+	renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	renderer->context->DrawAuto();
 
 	// Unset Geometry Shader for next frame and reset states
-	context->GSSetShader(0, 0, 0);
-	context->OMSetBlendState(0, factor, 0xffffffff);
-	context->OMSetDepthStencilState(0, 0);
+	renderer->context->GSSetShader(0, 0, 0);
+	renderer->context->OMSetBlendState(0, factor, 0xffffffff);
+	renderer->context->OMSetDepthStencilState(0, 0);
 
 	// Reset topology
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void ParticleEmitter::SwapSOBuffers()
@@ -163,9 +160,9 @@ void ParticleEmitter::SwapSOBuffers()
 	soBufferWrite = temp;
 }
 
-void ParticleEmitter::DrawSpawn(ID3D11DeviceContext * context, float deltaTime, float totalTime)
+void ParticleEmitter::DrawSpawn(Renderer* renderer, float deltaTime, float totalTime)
 {
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 	UINT stride = sizeof(ParticleVertex);
 	UINT offset = 0;
 
@@ -176,39 +173,39 @@ void ParticleEmitter::DrawSpawn(ID3D11DeviceContext * context, float deltaTime, 
 	spawnGS->SetFloat("maxLifetime", particleMaxLifetime);
 	spawnGS->SetFloat("totalTime", totalTime);
 	spawnGS->SetSamplerState("randomSampler", particleSampler);
-	spawnGS->SetShaderResourceView("randomTexture", randomSRV);
+	spawnGS->SetShaderResourceView("randomTexture", renderer->GetRandomTexture());
 	spawnGS->SetShader();
 	spawnGS->CopyAllBufferData();
 
 	spawnVS->SetShader();
 	spawnVS->CopyAllBufferData();
 
-	context->PSSetShader(0, 0, 0); // No pixel shader needed
+	renderer->context->PSSetShader(0, 0, 0); // No pixel shader needed
 
 								   // Unbind vertex buffers (incase)
 	ID3D11Buffer* unset = 0;
-	context->IASetVertexBuffers(0, 1, &unset, &stride, &offset);
+	renderer->context->IASetVertexBuffers(0, 1, &unset, &stride, &offset);
 
 	// First frame?
 	if (frameCount == 0)
 	{
 		// Draw using the seed vertex
-		context->IASetVertexBuffers(0, 1, &particleVB, &stride, &offset);
-		context->SOSetTargets(1, &soBufferWrite, &offset);
-		context->Draw(1, 0);
+		renderer->context->IASetVertexBuffers(0, 1, &particleVB, &stride, &offset);
+		renderer->context->SOSetTargets(1, &soBufferWrite, &offset);
+		renderer->context->Draw(1, 0);
 		frameCount++;
 	}
 	else
 	{
 		// Draw using the buffers
-		context->IASetVertexBuffers(0, 1, &soBufferRead, &stride, &offset);
-		context->SOSetTargets(1, &soBufferWrite, &offset);
-		context->DrawAuto();
+		renderer->context->IASetVertexBuffers(0, 1, &soBufferRead, &stride, &offset);
+		renderer->context->SOSetTargets(1, &soBufferWrite, &offset);
+		renderer->context->DrawAuto();
 	}
 
 	// Unbind SO targets and shader
-	SimpleGeometryShader::UnbindStreamOutStage(context);
-	context->GSSetShader(0, 0, 0);
+	SimpleGeometryShader::UnbindStreamOutStage(renderer->context);
+	renderer->context->GSSetShader(0, 0, 0);
 
 	// Swap after draw
 	SwapSOBuffers();
