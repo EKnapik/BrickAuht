@@ -1,6 +1,7 @@
 #include "Renderer.h"
 #include "WICTextureLoader.h"
 #include "DDSTextureLoader.h"
+#include <time.h>
 
 
 using namespace DirectX;
@@ -22,6 +23,8 @@ Renderer::Renderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* d
 	AddSampler("default", &samplerDesc);
 
 	SetUpShadows();
+
+	SetUpRandomTexture();
 }
 
 
@@ -47,6 +50,11 @@ Renderer::~Renderer()
 		delete iterator->second;
 	}
 
+	typedef std::map<std::string, SimpleGeometryShader*>::iterator geometry_type;
+	for (geometry_type iterator = GeometryShaderDictionary.begin(); iterator != GeometryShaderDictionary.end(); iterator++) {
+		delete iterator->second;
+	}
+
 	typedef std::map<std::string, ID3D11SamplerState*>::iterator sampler_type;
 	for (sampler_type iterator = SamplerDictionary.begin(); iterator != SamplerDictionary.end(); iterator++) {
 		iterator->second->Release();
@@ -55,9 +63,11 @@ Renderer::~Renderer()
 	shadowDSV->Release();
 	shadowSRV->Release();
 	shadowRasterizer->Release();
+	randomTexture->Release();
+	randomSRV->Release();
 }
 
-void Renderer::RenderShadowMap(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights)
+void Renderer::RenderShadowMap()
 {
 	// Set up targets
 	context->OMSetRenderTargets(0, 0, shadowDSV);
@@ -113,7 +123,7 @@ void Renderer::RenderShadowMap(std::vector<GameEntity*>* gameEntitys, std::vecto
 	context->RSSetState(0);
 }
 
-void Renderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime)
+void Renderer::DrawOneMaterial(FLOAT deltaTime, FLOAT totalTime)
 {
 	// Background color (Cornflower Blue)
 	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
@@ -224,7 +234,7 @@ void Renderer::DrawOneMaterial(std::vector<GameEntity*>* gameEntitys, std::vecto
 
 }
 
-void Renderer::DrawMultipleMaterials(std::vector<GameEntity*>* gameEntitys, std::vector<SceneDirectionalLight>* directionalLights, std::vector<ScenePointLight>* pointLights, FLOAT deltaTime, FLOAT totalTime)
+void Renderer::DrawMultipleMaterials(FLOAT deltaTime, FLOAT totalTime)
 {
 	// Background color (Cornflower Blue)
 	/*
@@ -363,6 +373,16 @@ void Renderer::DrawSkyBox()
 	context->OMSetDepthStencilState(0, 0);
 }
 
+void Renderer::DrawParticleEmitters(FLOAT deltaTime, FLOAT totalTime)
+{
+	for (int i = 0; i < particleEmitters->size(); i++)
+	{
+		if (particleEmitters->at(i).initialized == false)
+			particleEmitters->at(i).Init(this);
+		particleEmitters->at(i).Draw(this, deltaTime, totalTime);
+	}
+}
+
 void Renderer::AddMesh(std::string name, Mesh * mesh)
 {
 	MeshDictionary.insert(std::pair<std::string, Mesh*>(name, mesh));
@@ -454,6 +474,30 @@ void Renderer::AddPixelShader(std::string name, std::wstring path)
 	PixelShaderDictionary.insert(std::pair<std::string, SimplePixelShader*>(name, pixelShader));
 }
 
+void Renderer::AddGeometryShader(std::string name, std::wstring path)
+{
+	std::wstring debug = L"Debug/";
+	debug += path;
+	SimpleGeometryShader* geometryShader = new SimpleGeometryShader(device, context);
+	if (!geometryShader->LoadShaderFile(debug.c_str()))
+	{
+		geometryShader->LoadShaderFile(path.c_str());
+	}
+	GeometryShaderDictionary.insert(std::pair<std::string, SimpleGeometryShader*>(name, geometryShader));
+}
+
+void Renderer::AddGeometryShader(std::string name, std::wstring path, bool useStreamOut, bool allowStreamOutRasterization)
+{
+	std::wstring debug = L"Debug/";
+	debug += path;
+	SimpleGeometryShader* geometryShader = new SimpleGeometryShader(device, context, useStreamOut, allowStreamOutRasterization);
+	if (!geometryShader->LoadShaderFile(debug.c_str()))
+	{
+		geometryShader->LoadShaderFile(path.c_str());
+	}
+	GeometryShaderDictionary.insert(std::pair<std::string, SimpleGeometryShader*>(name, geometryShader));
+}
+
 void Renderer::AddSampler(std::string name, D3D11_SAMPLER_DESC * sampleDesc)
 {
 	ID3D11SamplerState* samplerState;
@@ -539,6 +583,43 @@ void Renderer::SetUpShadows()
 	XMStoreFloat4x4(&shadowPointProjectionMatrix, XMMatrixTranspose(shProj));
 }
 
+void Renderer::SetUpRandomTexture()
+{
+	// Set up "random" stuff -------------------------------------
+	unsigned int randomTextureWidth = 1024;
+
+	// Random data for the 1D texture
+	srand((unsigned int)time(0));
+	std::vector<float> data(randomTextureWidth * 4);
+	for (unsigned int i = 0; i < randomTextureWidth * 4; i++)
+		data[i] = rand() / (float)RAND_MAX * 2.0f - 1.0f;
+
+	// Set up texture
+	D3D11_TEXTURE1D_DESC textureDesc;
+	textureDesc.ArraySize = 1;
+	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	textureDesc.MipLevels = 1;
+	textureDesc.MiscFlags = 0;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	textureDesc.Width = 100;
+
+	D3D11_SUBRESOURCE_DATA initData;
+	initData.pSysMem = (void*)&data[0];
+	initData.SysMemPitch = randomTextureWidth * sizeof(float) * 4;
+	initData.SysMemSlicePitch = 0;
+	device->CreateTexture1D(&textureDesc, &initData, &randomTexture);
+
+	// Set up SRV for texture
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	srvDesc.Format = textureDesc.Format;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1D;
+	srvDesc.Texture1D.MipLevels = 1;
+	srvDesc.Texture1D.MostDetailedMip = 0;
+	device->CreateShaderResourceView(randomTexture, &srvDesc, &randomSRV);
+}
+
 Mesh * Renderer::GetMesh(std::string name)
 {
 	return MeshDictionary.at(name);
@@ -559,3 +640,7 @@ SimplePixelShader * Renderer::GetPixelShader(std::string name)
 	return PixelShaderDictionary.at(name);
 }
 
+SimpleGeometryShader * Renderer::GetGeometryShader(std::string name)
+{
+	return GeometryShaderDictionary.at(name);
+}

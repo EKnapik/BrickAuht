@@ -37,6 +37,15 @@
     <Filter Include="Header Files\Engine\Objects">
       <UniqueIdentifier>{7cdc3629-295f-4099-91d9-20d820d919b2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Deffered">
+      <UniqueIdentifier>{7a12e9cf-8023-4d2c-b66f-939f13aacea1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\ParticleSystem">
+      <UniqueIdentifier>{7dd83e01-0229-4dd7-8d80-3c87934061bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\General">
+      <UniqueIdentifier>{23bb64f7-2abb-4588-9c39-a70f847a3ae0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -88,6 +97,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Lights.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleEmitter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -155,37 +167,55 @@
     <ClInclude Include="DefferedRenderer.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="ParticleEmitter.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="PixelShader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="VertexShader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="gBufferVertexShader.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Deffered</Filter>
     </FxCompile>
     <FxCompile Include="gBufferPixelShader.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Deffered</Filter>
     </FxCompile>
     <FxCompile Include="quadPixelShader.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Deffered</Filter>
     </FxCompile>
     <FxCompile Include="quadVertexShader.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Deffered</Filter>
     </FxCompile>
     <FxCompile Include="sphereLightPixelShader.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Deffered</Filter>
     </FxCompile>
-    <FxCompile Include="SkyPixel.hlsl">
-      <Filter>Shaders</Filter>
+    <FxCompile Include="ParticleGS.hlsl">
+      <Filter>Shaders\ParticleSystem</Filter>
     </FxCompile>
-    <FxCompile Include="SkyVertex.hlsl">
-      <Filter>Shaders</Filter>
+    <FxCompile Include="ParticlePS.hlsl">
+      <Filter>Shaders\ParticleSystem</Filter>
+    </FxCompile>
+    <FxCompile Include="ParticleVS.hlsl">
+      <Filter>Shaders\ParticleSystem</Filter>
+    </FxCompile>
+    <FxCompile Include="SpawnGS.hlsl">
+      <Filter>Shaders\ParticleSystem</Filter>
+    </FxCompile>
+    <FxCompile Include="SpawnVS.hlsl">
+      <Filter>Shaders\ParticleSystem</Filter>
+    </FxCompile>
+    <FxCompile Include="PixelShader.hlsl">
+      <Filter>Shaders\General</Filter>
     </FxCompile>
     <FxCompile Include="ShadowVertex.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\General</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyPixel.hlsl">
+      <Filter>Shaders\General</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyVertex.hlsl">
+      <Filter>Shaders\General</Filter>
+    </FxCompile>
+    <FxCompile Include="VertexShader.hlsl">
+      <Filter>Shaders\General</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

@@ -70,6 +70,8 @@ BrickAuhtScene::BrickAuhtScene()
 		VEC4(0.1f, 0.1f, 0.1f, 1.0f),
 		VEC4(1.0f, 1.0f, 1.0f, 1.0f),
 		VEC3(0, 5, -10)));
+
+	ParticleEmitters.push_back(ParticleEmitter("particle", "default"));
 }
 
 void BrickAuhtScene::Initialize()
@@ -174,8 +176,7 @@ void BrickAuhtScene::Update()
 			GMath::GetMagnitude(&velocityMag, &ball->kinematics->velocity);
 			GMath::SetVector3(&ball->kinematics->velocity, distanceVec.x, distanceVec.y, distanceVec.z);
 			GMath::VectorScale(&ball->kinematics->velocity, velocityMag);
-
-			blocks.at(p)->ToDelete = true;
+			MarkForDelete(blocks.at(p));
 			blocks.erase(blocks.begin() + p);
 			p--;
 		}

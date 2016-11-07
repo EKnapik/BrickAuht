@@ -2,7 +2,12 @@
 
 void GameManager::Update(float dt)
 {
-	GameEntities.clear();
+	if (entitesSize != GameEntities.size() || entitesSize == -1 || gameObjectsSize != GameObjects->size() || activeScene->ObjectsDirty)
+	{
+		EntitiesDirty = true;
+		activeScene->ObjectsDirty = false;
+		GameEntities.clear();
+	}
 	for (int i = 0; i < GameObjects->size(); i++)
 	{
 		if (GameObjects->at(i)->ToDelete == true)
@@ -18,7 +23,7 @@ void GameManager::Update(float dt)
 		{
 			objectComponents->at(p)->Update(dt);
 		}
-		if (GameObjects->at(i)->entity != nullptr)
+		if (EntitiesDirty == true && GameObjects->at(i)->entity != nullptr)
 		{
 			GameEntities.push_back(GameObjects->at(i)->entity);
 		}
@@ -27,6 +32,8 @@ void GameManager::Update(float dt)
 	{
 		activeScene->Update();
 	}
+	gameObjectsSize = GameObjects->size();
+	entitesSize = GameEntities.size();
 }
 
 void GameManager::SetActiveScene(Scene * nextScene)
@@ -41,6 +48,22 @@ void GameManager::SetActiveScene(Scene * nextScene)
 	activeScene->Initialize();
 	GameObjects = &activeScene->GameObjects;
 	GameEntities.clear();
+	EntitiesDirty			= true;
+	DirectionalLightsDirty	= true;
+	PointLightsDirty		= true;
+	ParticleEmittersDirty	= true;
+	entitesSize = -1;
+	gameObjectsSize = -1;
+}
+
+GameManager::GameManager()
+{
+	EntitiesDirty			= true;
+	DirectionalLightsDirty = true;
+	PointLightsDirty = true;
+	ParticleEmittersDirty = true;
+	entitesSize = -1;
+	gameObjectsSize = -1;
 }
 
 GameManager::~GameManager()

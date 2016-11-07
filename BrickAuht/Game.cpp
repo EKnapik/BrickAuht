@@ -40,7 +40,6 @@ Game::~Game()
 {
 	// Release any (and all!) DirectX objects
 	// we've made in the Game class
-
 	delete renderer;
 	delete camera;
 }
@@ -92,6 +91,13 @@ void Game::LoadShaders()
 	renderer->AddVertexShader("quad", L"quadVertexShader.cso");
 	renderer->AddPixelShader("quad", L"quadPixelShader.cso");
 	renderer->AddPixelShader("sphereLight", L"sphereLightPixelShader.cso");
+
+	// Create shaders for Particle Systems
+	renderer->AddPixelShader("particle", L"ParticlePS.cso");
+	renderer->AddVertexShader("particle", L"ParticleVS.cso");
+	renderer->AddGeometryShader("particle", L"ParticleGS.cso");
+	renderer->AddGeometryShader("spawn", L"SpawnGS.cso", true, false);
+	renderer->AddVertexShader("spawn", L"SpawnVS.cso");
 }
 
 
@@ -123,7 +129,6 @@ void Game::LoadMaterials()
 
 	renderer->AddCubeMaterial("skybox", L"Assets/Textures/SunnyCubeMap.dds");
 }
-
 
 // --------------------------------------------------------
 // Handle resizing DirectX "stuff" to match the new window size.
@@ -176,6 +181,27 @@ void Game::Update(float deltaTime, float totalTime)
 			gameManager.SetActiveScene(new BouncingBallScene());
 		}
 	}
+
+	if (gameManager.EntitiesDirty)
+	{
+		gameManager.EntitiesDirty = false;
+		renderer->SetGameEntities(&gameManager.GameEntities);
+	}
+	if (gameManager.DirectionalLightsDirty)
+	{
+		gameManager.DirectionalLightsDirty = false;
+		renderer->SetDirectionalLights(gameManager.GetDirectionalLights());
+	}
+	if (gameManager.PointLightsDirty)
+	{
+		gameManager.PointLightsDirty = false;
+		renderer->SetPointLights(gameManager.GetPointLights());
+	}
+	if (gameManager.ParticleEmittersDirty)
+	{
+		gameManager.ParticleEmittersDirty = false;
+		renderer->SetParticleEmitters(gameManager.GetParticleEmitters());
+	}
 }
 
 // --------------------------------------------------------
@@ -183,12 +209,20 @@ void Game::Update(float deltaTime, float totalTime)
 // --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
-	renderer->RenderShadowMap(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights());
-	renderer->Render(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights(), deltaTime, totalTime);
+	renderer->RenderShadowMap();
+	renderer->Render(deltaTime, totalTime);
 	//renderer->DrawOneMaterial(&gameManager.GameEntities,  deltaTime, totalTime);
 	//renderer->DrawMultipleMaterials(&gameManager.GameEntities, deltaTime, totalTime);
 	//renderer->DrawMultipleMaterials(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights(), deltaTime, totalTime);
 	//renderer->DrawSkyBox();
+
+	/*context->ClearDepthStencilView(
+		depthStencilView,
+		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
+		1.0f,
+		0);
+	
+	emitter->Draw(context, camera, deltaTime, totalTime);*/
 	
 	swapChain->Present(0, 0);
 }

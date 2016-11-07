@@ -17,6 +17,8 @@
 #include "GameManager.h"
 #include "Renderer.h"
 
+#include "ParticleEmitter.h"
+
 class Game 
 	: public DXCore
 {
