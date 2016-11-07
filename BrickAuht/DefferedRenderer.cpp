@@ -340,7 +340,6 @@ void DefferedRenderer::directionalLightRender(std::vector<SceneDirectionalLight>
 	Mesh* meshTmp = GetMesh("quad");
 	ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
 	DirectionalLight light;
-	MAT4X4 world;
 	for (int i = 0; i < dirLights->size(); i++) {
 		// Send light info to pixel shader
 		light.AmbientColor = dirLights->at(i).AmbientColor;
@@ -359,7 +358,6 @@ void DefferedRenderer::directionalLightRender(std::vector<SceneDirectionalLight>
 	pixelShader->SetShaderResourceView("gNormal", 0);
 	pixelShader->SetShaderResourceView("gPosition", 0);
 	context->OMSetBlendState(0, factors, 0xFFFFFFFF);
-	context->RSSetState(0);
 	return;
 }
 
