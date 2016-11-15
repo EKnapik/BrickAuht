@@ -188,6 +188,12 @@ DefferedRenderer::DefferedRenderer(Camera *camera, ID3D11DeviceContext *context,
 	ligtRastDesc.CullMode = D3D11_CULL_FRONT;
 	ligtRastDesc.DepthClipEnable = false;
 	device->CreateRasterizerState(&ligtRastDesc, &lightRastState);
+
+	D3D11_DEPTH_STENCIL_DESC depthDesc = {};
+	depthDesc.DepthEnable = true;
+	depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	device->CreateDepthStencilState(&depthDesc, &lightDepthState);
 }
 
 
@@ -208,6 +214,7 @@ DefferedRenderer::~DefferedRenderer()
 	simpleSampler->Release();
 	blendState->Release();
 	lightRastState->Release();
+	lightDepthState->Release();
 }
 
 
@@ -230,14 +237,21 @@ void DefferedRenderer::Render(FLOAT deltaTime, FLOAT totalTime)
 		0);
 
 	//TODO: This is not the right place to draw particle systems
-	DrawParticleEmitters(deltaTime, totalTime);
-
+	
+	
 	gBufferRender(deltaTime, totalTime);
+	
 	context->OMSetRenderTargets(1, &backBufferRTV, 0);
+	context->OMSetDepthStencilState(lightDepthState, 0);
+
 	pointLightRender();
 	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
 	directionalLightRender();
+
+	context->OMSetDepthStencilState(0, 0);
+
 	DrawSkyBox();
+	DrawParticleEmitters(deltaTime, totalTime);
 }
 
 
