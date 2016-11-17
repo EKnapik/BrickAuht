@@ -222,6 +222,7 @@ void DefferedRenderer::Render(FLOAT deltaTime, FLOAT totalTime)
 	context->ClearRenderTargetView(AlbedoRTV, black);
 	context->ClearRenderTargetView(NormalRTV, black);
 	context->ClearRenderTargetView(PositionRTV, black);
+	context->ClearRenderTargetView(postProcessRTV, black);
 
 	context->ClearDepthStencilView(
 		depthStencilView,
@@ -230,14 +231,30 @@ void DefferedRenderer::Render(FLOAT deltaTime, FLOAT totalTime)
 		0);
 
 	//TODO: This is not the right place to draw particle systems
-	DrawParticleEmitters(deltaTime, totalTime);
+	if (PostProcessing)
+	{
+		DrawParticleEmitters(deltaTime, totalTime);
 
-	gBufferRender(deltaTime, totalTime);
-	context->OMSetRenderTargets(1, &backBufferRTV, 0);
-	pointLightRender();
-	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
-	directionalLightRender();
-	DrawSkyBox();
+		gBufferRender(deltaTime, totalTime);
+		context->OMSetRenderTargets(1, &postProcessRTV, 0);
+		pointLightRender();
+		context->OMSetRenderTargets(1, &postProcessRTV, depthStencilView);
+		directionalLightRender();
+		DrawSkyBox();
+
+		PostProcess();
+	}
+	else
+	{
+		DrawParticleEmitters(deltaTime, totalTime);
+
+		gBufferRender(deltaTime, totalTime);
+		context->OMSetRenderTargets(1, &backBufferRTV, 0);
+		pointLightRender();
+		context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
+		directionalLightRender();
+		DrawSkyBox();
+	}
 }
 
 

@@ -58,5 +58,7 @@ private:
 	POINT prevMousePos;
 
 	DirectionalLight light;
+
+	bool rShiftToggle = false;
 };
 

@@ -98,11 +98,13 @@ void Game::LoadShaders()
 	renderer->AddGeometryShader("particle", L"ParticleGS.cso");
 	renderer->AddGeometryShader("spawn", L"SpawnGS.cso", true, false);
 	renderer->AddVertexShader("spawn", L"SpawnVS.cso");
+
+	// Add Shaders for post processing
+	renderer->AddVertexShader("blur", L"BlurPostProcessVS.cso");
+	renderer->AddVertexShader("postprocess", L"PostProcessDefaultVS.cso");
+	renderer->AddPixelShader("blur", L"BlurPostProcessPS.cso");
+	renderer->AddPixelShader("kernel", L"KernelPS.cso");
 }
-
-
-
-
 
 void Game::LoadMeshes()
 {
@@ -180,6 +182,31 @@ void Game::Update(float deltaTime, float totalTime)
 		{
 			gameManager.SetActiveScene(new BouncingBallScene());
 		}
+	}
+
+	if (GetAsyncKeyState(VK_RSHIFT) & 0x8000)
+	{
+		if (GetAsyncKeyState('O') & 0x8000 && rShiftToggle == false)
+			renderer->PostProcessing == true ? renderer->PostProcessing = false : renderer->PostProcessing = true;
+		if (GetAsyncKeyState('1') & 0x8000 && rShiftToggle == false)
+			renderer->Blur == true ? renderer->Blur = false : renderer->Blur = true;
+		if (GetAsyncKeyState('2') & 0x8000 && rShiftToggle == false)
+			renderer->Bloom == true ? renderer->Bloom = false : renderer->Bloom = true;
+		if (GetAsyncKeyState('3') & 0x8000 && rShiftToggle == false)
+			renderer->EdgeDetect == true ? renderer->EdgeDetect = false : renderer->EdgeDetect = true;
+		if (GetAsyncKeyState('4') & 0x8000 && rShiftToggle == false)
+			renderer->Emboss == true ? renderer->Emboss = false : renderer->Emboss = true;
+		if (GetAsyncKeyState('5') & 0x8000 && rShiftToggle == false)
+			renderer->BlurWithKernel == true ? renderer->BlurWithKernel = false : renderer->BlurWithKernel = true;
+		if (GetAsyncKeyState('6') & 0x8000 && rShiftToggle == false)
+			renderer->Sharpness == true ? renderer->Sharpness = false : renderer->Sharpness = true;
+		if (GetAsyncKeyState('7') & 0x8000 && rShiftToggle == false)
+			renderer->BottomSobel == true ? renderer->BottomSobel = false : renderer->BottomSobel = true;
+		rShiftToggle = true;
+	}
+	else
+	{
+		rShiftToggle = false;
 	}
 
 	if (gameManager.EntitiesDirty)

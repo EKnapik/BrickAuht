@@ -6,6 +6,42 @@
 
 using namespace DirectX;
 
+FLOAT edgeDetectKernel[] = {
+-1, -1, -1,
+-1, 8, -1,
+-1, -1, -1
+};
+
+FLOAT embossKernel[] = {
+-2, -1, 0,
+-1, 1, 1,
+0, 1, 2
+};
+
+FLOAT blurKernel[] = {
+-1, 2, 1,
+2, 4, 2,
+1, 2, 1
+};
+
+FLOAT sharpnessKernel[] = {
+-1, -1, -1,
+-1, 9, -1,
+-1, -1, -1
+};
+
+FLOAT bottomSobelKernel[] = {
+-1, -2, -1,
+0, 0, 0,
+1, 2, 1
+};
+
+FLOAT defaultKernel[] = {
+0, 0, 0,
+0, 1, 0,
+0, 0, 0
+};
+
 Renderer::Renderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* device, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView)
 {
 	this->camera = camera;
@@ -23,8 +59,8 @@ Renderer::Renderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* d
 	AddSampler("default", &samplerDesc);
 
 	SetUpShadows();
-
 	SetUpRandomTexture();
+	SetUpPostProcessing();
 }
 
 
@@ -65,6 +101,8 @@ Renderer::~Renderer()
 	shadowRasterizer->Release();
 	randomTexture->Release();
 	randomSRV->Release();
+	postProcessSRV->Release();
+	postProcessRTV->Release();
 }
 
 void Renderer::RenderShadowMap()
@@ -383,6 +421,158 @@ void Renderer::DrawParticleEmitters(FLOAT deltaTime, FLOAT totalTime)
 	}
 }
 
+void Renderer::PostProcess()
+{
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+
+	context->OMSetRenderTargets(1, &backBufferRTV, 0);
+
+
+	if (Blur)
+	{
+		// Set up post process shader
+		GetVertexShader("blur")->SetShader();
+
+		GetPixelShader("blur")->SetShader();
+		GetPixelShader("blur")->SetShaderResourceView("Pixels", postProcessSRV);
+		GetPixelShader("blur")->SetSamplerState("Sampler", GetSampler("default"));
+		GetPixelShader("blur")->SetInt("blurAmount", 1);
+		GetPixelShader("blur")->SetFloat("pixelWidth", 1.0f / width);
+		GetPixelShader("blur")->SetFloat("pixelHeight", 1.0f / height);
+		GetPixelShader("blur")->CopyAllBufferData();
+
+		// Now actually draw
+		ID3D11Buffer* nothing = 0;
+		context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
+		context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
+
+		context->Draw(3, 0);
+
+		GetPixelShader("blur")->SetShaderResourceView("Pixels", 0);
+	}
+	if (EdgeDetect)
+	{
+		GetVertexShader("postprocess")->SetShader();
+
+		GetPixelShader("kernel")->SetShader();
+		GetPixelShader("kernel")->SetShaderResourceView("Pixels", postProcessSRV);
+		GetPixelShader("kernel")->SetSamplerState("Sampler", GetSampler("default"));
+		GetPixelShader("kernel")->SetFloat("pixelWidth", 1.0f / width);
+		GetPixelShader("kernel")->SetFloat("pixelHeight", 1.0f / height);
+		GetPixelShader("kernel")->SetFloat3("kernelA", VEC3(edgeDetectKernel[0], edgeDetectKernel[1], edgeDetectKernel[2]));
+		GetPixelShader("kernel")->SetFloat3("kernelB", VEC3(edgeDetectKernel[3], edgeDetectKernel[4], edgeDetectKernel[5]));
+		GetPixelShader("kernel")->SetFloat3("kernelC", VEC3(edgeDetectKernel[6], edgeDetectKernel[7], edgeDetectKernel[8]));
+		GetPixelShader("kernel")->SetFloat("kernelWeight", 1);
+		GetPixelShader("kernel")->CopyAllBufferData();
+
+		// Now actually draw
+		ID3D11Buffer* nothing = 0;
+		context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
+		context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
+
+		context->Draw(3, 0);
+
+		GetPixelShader("kernel")->SetShaderResourceView("Pixels", 0);
+	}
+	if (Emboss)
+	{
+		GetVertexShader("postprocess")->SetShader();
+
+		GetPixelShader("kernel")->SetShader();
+		GetPixelShader("kernel")->SetShaderResourceView("Pixels", postProcessSRV);
+		GetPixelShader("kernel")->SetSamplerState("Sampler", GetSampler("default"));
+		GetPixelShader("kernel")->SetFloat("pixelWidth", 1.0f / width);
+		GetPixelShader("kernel")->SetFloat("pixelHeight", 1.0f / height);
+		GetPixelShader("kernel")->SetFloat3("kernelA", VEC3(embossKernel[0], embossKernel[1], embossKernel[2]));
+		GetPixelShader("kernel")->SetFloat3("kernelB", VEC3(embossKernel[3], embossKernel[4], embossKernel[5]));
+		GetPixelShader("kernel")->SetFloat3("kernelC", VEC3(embossKernel[6], embossKernel[7], embossKernel[8]));
+		GetPixelShader("kernel")->SetFloat("kernelWeight", 1);
+		GetPixelShader("kernel")->CopyAllBufferData();
+
+		// Now actually draw
+		ID3D11Buffer* nothing = 0;
+		context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
+		context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
+
+		context->Draw(3, 0);
+
+		GetPixelShader("kernel")->SetShaderResourceView("Pixels", 0);
+	}
+	if (BlurWithKernel)
+	{
+		GetVertexShader("postprocess")->SetShader();
+
+		GetPixelShader("kernel")->SetShader();
+		GetPixelShader("kernel")->SetShaderResourceView("Pixels", postProcessSRV);
+		GetPixelShader("kernel")->SetSamplerState("Sampler", GetSampler("default"));
+		GetPixelShader("kernel")->SetFloat("pixelWidth", 1.0f / width);
+		GetPixelShader("kernel")->SetFloat("pixelHeight", 1.0f / height);
+		GetPixelShader("kernel")->SetFloat3("kernelA", VEC3(blurKernel[0], blurKernel[1], blurKernel[2]));
+		GetPixelShader("kernel")->SetFloat3("kernelB", VEC3(blurKernel[3], blurKernel[4], blurKernel[5]));
+		GetPixelShader("kernel")->SetFloat3("kernelC", VEC3(blurKernel[6], blurKernel[7], blurKernel[8]));
+		GetPixelShader("kernel")->SetFloat("kernelWeight", 14);
+		GetPixelShader("kernel")->CopyAllBufferData();
+
+		// Now actually draw
+		ID3D11Buffer* nothing = 0;
+		context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
+		context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
+
+		context->Draw(3, 0);
+
+		GetPixelShader("kernel")->SetShaderResourceView("Pixels", 0);
+	}
+	if (Sharpness)
+	{
+		GetVertexShader("postprocess")->SetShader();
+
+		GetPixelShader("kernel")->SetShader();
+		GetPixelShader("kernel")->SetShaderResourceView("Pixels", postProcessSRV);
+		GetPixelShader("kernel")->SetSamplerState("Sampler", GetSampler("default"));
+		GetPixelShader("kernel")->SetFloat("pixelWidth", 1.0f / width);
+		GetPixelShader("kernel")->SetFloat("pixelHeight", 1.0f / height);
+		GetPixelShader("kernel")->SetFloat3("kernelA", VEC3(sharpnessKernel[0], sharpnessKernel[1], sharpnessKernel[2]));
+		GetPixelShader("kernel")->SetFloat3("kernelB", VEC3(sharpnessKernel[3], sharpnessKernel[4], sharpnessKernel[5]));
+		GetPixelShader("kernel")->SetFloat3("kernelC", VEC3(sharpnessKernel[6], sharpnessKernel[7], sharpnessKernel[8]));
+		GetPixelShader("kernel")->SetFloat("kernelWeight", 1);
+		GetPixelShader("kernel")->CopyAllBufferData();
+
+		// Now actually draw
+		ID3D11Buffer* nothing = 0;
+		context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
+		context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
+
+		context->Draw(3, 0);
+
+		GetPixelShader("kernel")->SetShaderResourceView("Pixels", 0);
+	}
+	if (BottomSobel)
+	{
+		GetVertexShader("postprocess")->SetShader();
+
+		GetPixelShader("kernel")->SetShader();
+		GetPixelShader("kernel")->SetShaderResourceView("Pixels", postProcessSRV);
+		GetPixelShader("kernel")->SetSamplerState("Sampler", GetSampler("default"));
+		GetPixelShader("kernel")->SetFloat("pixelWidth", 1.0f / width);
+		GetPixelShader("kernel")->SetFloat("pixelHeight", 1.0f / height);
+		GetPixelShader("kernel")->SetFloat3("kernelA", VEC3(bottomSobelKernel[0], bottomSobelKernel[1], bottomSobelKernel[2]));
+		GetPixelShader("kernel")->SetFloat3("kernelB", VEC3(bottomSobelKernel[3], bottomSobelKernel[4], bottomSobelKernel[5]));
+		GetPixelShader("kernel")->SetFloat3("kernelC", VEC3(bottomSobelKernel[6], bottomSobelKernel[7], bottomSobelKernel[8]));
+		GetPixelShader("kernel")->SetFloat("kernelWeight", 1);
+		GetPixelShader("kernel")->CopyAllBufferData();
+
+		// Now actually draw
+		ID3D11Buffer* nothing = 0;
+		context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
+		context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
+
+		context->Draw(3, 0);
+
+		GetPixelShader("kernel")->SetShaderResourceView("Pixels", 0);
+	}
+}
+
 void Renderer::AddMesh(std::string name, Mesh * mesh)
 {
 	MeshDictionary.insert(std::pair<std::string, Mesh*>(name, mesh));
@@ -618,6 +808,48 @@ void Renderer::SetUpRandomTexture()
 	srvDesc.Texture1D.MipLevels = 1;
 	srvDesc.Texture1D.MostDetailedMip = 0;
 	device->CreateShaderResourceView(randomTexture, &srvDesc, &randomSRV);
+}
+
+void Renderer::SetUpPostProcessing()
+{
+	// Post Processing needs a Texture 
+	D3D11_TEXTURE2D_DESC textureDesc = {};
+	// TODO: We still don't pass in width and height
+	textureDesc.Width = 1280;
+	textureDesc.Height = 720;
+	textureDesc.ArraySize = 1;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	textureDesc.MipLevels = 1;
+	textureDesc.MiscFlags = 0;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+
+	ID3D11Texture2D* ppTexture;
+	HRESULT result = device->CreateTexture2D(&textureDesc, 0, &ppTexture);
+
+	// It is also going to need its own render Target View so we can go 
+	// ahead and set that up too.
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.Format = textureDesc.Format;
+	rtvDesc.Texture2D.MipSlice = 0;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+
+	device->CreateRenderTargetView(ppTexture, &rtvDesc, &postProcessRTV);
+
+	//Lastly create a Shader Resource View For it.
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = textureDesc.Format;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+
+	device->CreateShaderResourceView(ppTexture, &srvDesc, &postProcessSRV);
+
+	// Release the texture because it is now stored on the GPU.
+	ppTexture->Release();
 }
 
 Mesh * Renderer::GetMesh(std::string name)

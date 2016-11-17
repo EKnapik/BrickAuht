@@ -71,7 +71,7 @@ BrickAuhtScene::BrickAuhtScene()
 		VEC4(1.0f, 1.0f, 1.0f, 1.0f),
 		VEC3(0, 5, -10)));
 
-	ParticleEmitters.push_back(ParticleEmitter("particle", "default"));
+	//ParticleEmitters.push_back(ParticleEmitter("particle", "default"));
 }
 
 void BrickAuhtScene::Initialize()

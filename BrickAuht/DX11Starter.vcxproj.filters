@@ -46,6 +46,9 @@
     <Filter Include="Shaders\General">
       <UniqueIdentifier>{23bb64f7-2abb-4588-9c39-a70f847a3ae0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\PostProcessing">
+      <UniqueIdentifier>{729492c2-4edd-4353-8394-5eaa7e18d727}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -216,6 +219,18 @@
     </FxCompile>
     <FxCompile Include="VertexShader.hlsl">
       <Filter>Shaders\General</Filter>
+    </FxCompile>
+    <FxCompile Include="BlurPostProcessPS.hlsl">
+      <Filter>Shaders\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="BlurPostProcessVS.hlsl">
+      <Filter>Shaders\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="PostProcessDefaultVS.hlsl">
+      <Filter>Shaders\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="KernelPS.hlsl">
+      <Filter>Shaders\PostProcessing</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

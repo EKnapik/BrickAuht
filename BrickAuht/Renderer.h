@@ -28,6 +28,8 @@ public:
 
 	void DrawParticleEmitters(FLOAT deltaTime, FLOAT totalTime);
 
+	void PostProcess();
+
 	void AddMesh(std::string name, Mesh* mesh);
 	void AddMesh(std::string name, std::string path);
 
@@ -75,10 +77,22 @@ public:
 	void SetPointLights(std::vector<ScenePointLight>* pointLights) { this->pointLights = pointLights; }
 	void SetParticleEmitters(std::vector<ParticleEmitter>* particleEmitters) { this->particleEmitters = particleEmitters; }
 
+	// This section is the Post Process Boolean section.
+	BOOL PostProcessing = false;
+	BOOL Blur = false;
+	BOOL EdgeDetect = false;
+	BOOL Bloom = false;
+	BOOL Emboss = false;
+	BOOL BlurWithKernel = false;
+	BOOL Sharpness = true;
+	BOOL BottomSobel = false;
+
 protected:
 	void SetUpShadows();
 
 	void SetUpRandomTexture();
+
+	void SetUpPostProcessing();
 
 	std::vector<GameEntity*>* gameEntitys;
 	std::vector<SceneDirectionalLight>* directionalLights;
@@ -86,12 +100,14 @@ protected:
 	std::vector<ParticleEmitter>* particleEmitters;
 
 	ID3D11RenderTargetView* backBufferRTV;
+	ID3D11RenderTargetView* postProcessRTV;
 	ID3D11DepthStencilView* depthStencilView;
 	ID3D11DepthStencilView* shadowDSV;
 	ID3D11ShaderResourceView* shadowSRV;
+	ID3D11ShaderResourceView* randomSRV;
+	ID3D11ShaderResourceView* postProcessSRV;
 	ID3D11RasterizerState* shadowRasterizer;
 	ID3D11Texture1D* randomTexture;
-	ID3D11ShaderResourceView* randomSRV;
 
 	std::map<std::string, Mesh*>				MeshDictionary;
 	std::map<std::string, Material*>			MaterialDictionary;
