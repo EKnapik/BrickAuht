@@ -188,6 +188,12 @@ DefferedRenderer::DefferedRenderer(Camera *camera, ID3D11DeviceContext *context,
 	ligtRastDesc.CullMode = D3D11_CULL_FRONT;
 	ligtRastDesc.DepthClipEnable = false;
 	device->CreateRasterizerState(&ligtRastDesc, &lightRastState);
+
+	D3D11_DEPTH_STENCIL_DESC depthDesc = {};
+	depthDesc.DepthEnable = true;
+	depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	device->CreateDepthStencilState(&depthDesc, &lightDepthState);
 }
 
 
@@ -208,6 +214,7 @@ DefferedRenderer::~DefferedRenderer()
 	simpleSampler->Release();
 	blendState->Release();
 	lightRastState->Release();
+	lightDepthState->Release();
 }
 
 
@@ -230,30 +237,39 @@ void DefferedRenderer::Render(FLOAT deltaTime, FLOAT totalTime)
 		1.0f,
 		0);
 
-	//TODO: This is not the right place to draw particle systems
 	if (PostProcessing)
 	{
-		DrawParticleEmitters(deltaTime, totalTime);
-
 		gBufferRender(deltaTime, totalTime);
+
 		context->OMSetRenderTargets(1, &postProcessRTV, 0);
+		context->OMSetDepthStencilState(lightDepthState, 0);
+
 		pointLightRender();
 		context->OMSetRenderTargets(1, &postProcessRTV, depthStencilView);
 		directionalLightRender();
+
+		context->OMSetDepthStencilState(0, 0);
+
 		DrawSkyBox();
+		DrawParticleEmitters(deltaTime, totalTime);
 
 		PostProcess();
 	}
 	else
 	{
-		DrawParticleEmitters(deltaTime, totalTime);
-
 		gBufferRender(deltaTime, totalTime);
+
 		context->OMSetRenderTargets(1, &backBufferRTV, 0);
+		context->OMSetDepthStencilState(lightDepthState, 0);
+
 		pointLightRender();
 		context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
 		directionalLightRender();
+
+		context->OMSetDepthStencilState(0, 0);
+
 		DrawSkyBox();
+		DrawParticleEmitters(deltaTime, totalTime);
 	}
 }
 
@@ -358,7 +374,6 @@ void DefferedRenderer::directionalLightRender() {
 	Mesh* meshTmp = GetMesh("quad");
 	ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
 	DirectionalLight light;
-	MAT4X4 world;
 	for (int i = 0; i < directionalLights->size(); i++) {
 		// Send light info to pixel shader
 		light.AmbientColor = directionalLights->at(i).AmbientColor;
@@ -377,7 +392,6 @@ void DefferedRenderer::directionalLightRender() {
 	pixelShader->SetShaderResourceView("gNormal", 0);
 	pixelShader->SetShaderResourceView("gPosition", 0);
 	context->OMSetBlendState(0, factors, 0xFFFFFFFF);
-	context->RSSetState(0);
 	return;
 }
 
