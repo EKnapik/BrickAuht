@@ -33,7 +33,6 @@ private:
 	ID3D11SamplerState* simpleSampler;
 	ID3D11BlendState* blendState;
 	ID3D11RasterizerState* lightRastState;
-	ID3D11DepthStencilState* lightDepthState;
 
 	float windowWidth;
 	float windowHeight;

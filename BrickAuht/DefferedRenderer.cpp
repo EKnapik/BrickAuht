@@ -188,12 +188,6 @@ DefferedRenderer::DefferedRenderer(Camera *camera, ID3D11DeviceContext *context,
 	ligtRastDesc.CullMode = D3D11_CULL_FRONT;
 	ligtRastDesc.DepthClipEnable = false;
 	device->CreateRasterizerState(&ligtRastDesc, &lightRastState);
-
-	D3D11_DEPTH_STENCIL_DESC depthDesc = {};
-	depthDesc.DepthEnable = true;
-	depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
-	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-	device->CreateDepthStencilState(&depthDesc, &lightDepthState);
 }
 
 
@@ -214,7 +208,6 @@ DefferedRenderer::~DefferedRenderer()
 	simpleSampler->Release();
 	blendState->Release();
 	lightRastState->Release();
-	lightDepthState->Release();
 }
 
 
@@ -242,12 +235,10 @@ void DefferedRenderer::Render(FLOAT deltaTime, FLOAT totalTime)
 		gBufferRender(deltaTime, totalTime);
 
 		context->OMSetRenderTargets(1, &postProcessRTV, 0);
-		context->OMSetDepthStencilState(lightDepthState, 0);
-
 		pointLightRender();
-		context->OMSetRenderTargets(1, &postProcessRTV, depthStencilView);
 		directionalLightRender();
 
+		context->OMSetRenderTargets(1, &postProcessRTV, depthStencilView);
 		context->OMSetDepthStencilState(0, 0);
 
 		DrawSkyBox();
@@ -260,12 +251,10 @@ void DefferedRenderer::Render(FLOAT deltaTime, FLOAT totalTime)
 		gBufferRender(deltaTime, totalTime);
 
 		context->OMSetRenderTargets(1, &backBufferRTV, 0);
-		context->OMSetDepthStencilState(lightDepthState, 0);
-
 		pointLightRender();
-		context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
 		directionalLightRender();
 
+		context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
 		context->OMSetDepthStencilState(0, 0);
 
 		DrawSkyBox();
@@ -415,8 +404,8 @@ void DefferedRenderer::DrawMultipleMaterials()
 	bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
-	ID3D11BlendState* blendState;
-	device->CreateBlendState(&bd, &blendState);
+	ID3D11BlendState* transBlendState;
+	device->CreateBlendState(&bd, &transBlendState);
 
 	//Do shadow stuff!
 	SceneDirectionalLight* firstDirectionalLight = &directionalLights->at(0);
@@ -433,7 +422,7 @@ void DefferedRenderer::DrawMultipleMaterials()
 
 		if (material->transparency == true)
 		{	
-			context->OMSetBlendState(blendState, factors, 0xFFFFFFFF);
+			context->OMSetBlendState(transBlendState, factors, 0xFFFFFFFF);
 			blendMode = true;
 		} else if (blendMode == true)
 		{
@@ -466,7 +455,7 @@ void DefferedRenderer::DrawMultipleMaterials()
 		context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
 	}
 
-	blendState->Release();
+	transBlendState->Release();
 	context->OMSetBlendState(0, factors, 0xFFFFFFFF);
 	context->RSSetState(0);
 }

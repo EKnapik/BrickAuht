@@ -45,15 +45,15 @@ BrickAuhtScene::BrickAuhtScene()
 	{
 		PointLights.push_back(ScenePointLight(
 			VEC4(1.0f, 0.2f, 0.2f, 1.0f),
-			VEC3(-5.5, 5, i * 3), 5.0));
+			VEC3(-4, 5, i * 3), 7.5));
 
 		PointLights.push_back(ScenePointLight(
 			VEC4(0.2f, 0.2f, 1.0f, 1.0f),
-			VEC3(5.5, 5, i * 3), 5.0));
+			VEC3(4, 5, i * 3), 7.5));
 	}
 	playerLight = new ScenePointLight(
 		VEC4(1.0f, 0, 0, 1.0f),
-		VEC3(0, 0, 0), 3.0);
+		VEC3(0, 0, 0), 5.0);
 	PointLights.push_back(*playerLight);
 
 	ballLight = new ScenePointLight(
