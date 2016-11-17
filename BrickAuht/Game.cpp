@@ -184,30 +184,62 @@ void Game::Update(float deltaTime, float totalTime)
 		}
 	}
 
-	if (GetAsyncKeyState(VK_RSHIFT) & 0x8000)
+	bool currShift = (GetAsyncKeyState(VK_RSHIFT) & 0x8000) != 0;
+	bool currTab = (GetAsyncKeyState('	') & 0x8000) != 0;
+	bool currO = (GetAsyncKeyState('O') & 0x8000) != 0;
+	if (currShift)
 	{
-		if (GetAsyncKeyState('O') & 0x8000 && rShiftToggle == false)
-			renderer->PostProcessing == true ? renderer->PostProcessing = false : renderer->PostProcessing = true;
-		if (GetAsyncKeyState('1') & 0x8000 && rShiftToggle == false)
-			renderer->Blur == true ? renderer->Blur = false : renderer->Blur = true;
-		if (GetAsyncKeyState('2') & 0x8000 && rShiftToggle == false)
-			renderer->Bloom == true ? renderer->Bloom = false : renderer->Bloom = true;
-		if (GetAsyncKeyState('3') & 0x8000 && rShiftToggle == false)
-			renderer->EdgeDetect == true ? renderer->EdgeDetect = false : renderer->EdgeDetect = true;
-		if (GetAsyncKeyState('4') & 0x8000 && rShiftToggle == false)
-			renderer->Emboss == true ? renderer->Emboss = false : renderer->Emboss = true;
-		if (GetAsyncKeyState('5') & 0x8000 && rShiftToggle == false)
-			renderer->BlurWithKernel == true ? renderer->BlurWithKernel = false : renderer->BlurWithKernel = true;
-		if (GetAsyncKeyState('6') & 0x8000 && rShiftToggle == false)
-			renderer->Sharpness == true ? renderer->Sharpness = false : renderer->Sharpness = true;
-		if (GetAsyncKeyState('7') & 0x8000 && rShiftToggle == false)
-			renderer->BottomSobel == true ? renderer->BottomSobel = false : renderer->BottomSobel = true;
-		rShiftToggle = true;
+		if (currO && !O_toggle)
+		{
+			if (renderer->PostProcessing == true)
+			{
+				renderer->PostProcessing = false;
+			} else
+			{
+				renderer->PostProcessing = true;
+				renderer->Blur = false;
+				renderer->Bloom = false;
+				renderer->EdgeDetect = false;
+				renderer->Emboss = false;
+				renderer->BlurWithKernel = false;
+				renderer->Sharpness = false;
+				renderer->BottomSobel = false;
+				postProcessChoice = 0;
+			}
+		}
+		O_toggle = currO;
+
+		if (currTab && !prevTab)
+			postProcessChoice = (postProcessChoice + 1) % 7;
+		prevTab = currTab;
+
+		switch (postProcessChoice)
+		{
+		case 0: renderer->BottomSobel = false;
+				renderer->Blur = true;
+				break;
+		case 1: renderer->Blur = false;
+				renderer->Bloom = true;
+				break;
+		case 2: renderer->Bloom = false;
+				renderer->EdgeDetect = true;
+				break;
+		case 3: renderer->EdgeDetect = false;
+				renderer->Emboss = true;
+				break;
+		case 4: renderer->Emboss = false;
+				renderer->BlurWithKernel = true;
+				break;
+		case 5: renderer->BlurWithKernel = false;
+				renderer->Sharpness = true;
+				break;
+		case 6: renderer->Sharpness = false;
+				renderer->BottomSobel = true;
+				break;
+		}
 	}
-	else
-	{
-		rShiftToggle = false;
-	}
+
+
 
 	if (gameManager.EntitiesDirty)
 	{

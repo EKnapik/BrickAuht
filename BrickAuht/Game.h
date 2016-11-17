@@ -59,6 +59,8 @@ private:
 
 	DirectionalLight light;
 
-	bool rShiftToggle = false;
+	bool O_toggle = false;
+	bool prevTab = false;
+	int postProcessChoice = 1;
 };
 
