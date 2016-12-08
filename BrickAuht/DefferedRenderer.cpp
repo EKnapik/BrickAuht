@@ -315,7 +315,6 @@ void DefferedRenderer::pointLightRender()
 		// Send light info to pixel shader
 		light.Color = pointLights->at(i).Color;
 		light.Position = pointLights->at(i).Position;
-		// divide by 10 so attenuation looks good
 		light.Radius = pointLights->at(i).Radius.x;
 		pixelShader->SetData("pointLight", &light, sizeof(PointLight));
 
