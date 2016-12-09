@@ -232,6 +232,9 @@
     <FxCompile Include="KernelPS.hlsl">
       <Filter>Shaders\PostProcessing</Filter>
     </FxCompile>
+    <FxCompile Include="BloomExtractPS.hlsl">
+      <Filter>Shaders\PostProcessing</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

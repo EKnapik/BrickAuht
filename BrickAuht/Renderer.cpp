@@ -103,6 +103,11 @@ Renderer::~Renderer()
 	randomSRV->Release();
 	postProcessSRV->Release();
 	postProcessRTV->Release();
+
+	bloomExtractRTV->Release();
+	bloomHorizonatalRTV->Release();
+	bloomExtractSRV->Release();
+	bloomHorizonatalSRV->Release();
 }
 
 void Renderer::RenderShadowMap()
@@ -214,11 +219,9 @@ void Renderer::PostProcess()
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
-	context->OMSetRenderTargets(1, &backBufferRTV, 0);
-
-
 	if (Blur)
 	{
+		context->OMSetRenderTargets(1, &backBufferRTV, 0);
 		// Set up post process shader
 		GetVertexShader("blur")->SetShader();
 
@@ -241,6 +244,7 @@ void Renderer::PostProcess()
 	}
 	if (EdgeDetect)
 	{
+		context->OMSetRenderTargets(1, &backBufferRTV, 0);
 		GetVertexShader("postprocess")->SetShader();
 
 		GetPixelShader("kernel")->SetShader();
@@ -265,6 +269,7 @@ void Renderer::PostProcess()
 	}
 	if (Emboss)
 	{
+		context->OMSetRenderTargets(1, &backBufferRTV, 0);
 		GetVertexShader("postprocess")->SetShader();
 
 		GetPixelShader("kernel")->SetShader();
@@ -289,6 +294,7 @@ void Renderer::PostProcess()
 	}
 	if (BlurWithKernel)
 	{
+		context->OMSetRenderTargets(1, &backBufferRTV, 0);
 		GetVertexShader("postprocess")->SetShader();
 
 		GetPixelShader("kernel")->SetShader();
@@ -313,6 +319,7 @@ void Renderer::PostProcess()
 	}
 	if (Sharpness)
 	{
+		context->OMSetRenderTargets(1, &backBufferRTV, 0);
 		GetVertexShader("postprocess")->SetShader();
 
 		GetPixelShader("kernel")->SetShader();
@@ -331,12 +338,13 @@ void Renderer::PostProcess()
 		context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
 		context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
 
-		context->Draw(3, 0);
+		context->Draw(3, 0); 
 
 		GetPixelShader("kernel")->SetShaderResourceView("Pixels", 0);
 	}
 	if (BottomSobel)
 	{
+		context->OMSetRenderTargets(1, &backBufferRTV, 0);
 		GetVertexShader("postprocess")->SetShader();
 
 		GetPixelShader("kernel")->SetShader();
@@ -354,10 +362,43 @@ void Renderer::PostProcess()
 		ID3D11Buffer* nothing = 0;
 		context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
 		context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
-
 		context->Draw(3, 0);
 
 		GetPixelShader("kernel")->SetShaderResourceView("Pixels", 0);
+	}
+	if (Bloom)
+	{
+		float intensityThreshold = 2.0f;
+		float blurAmount = 2.0f;
+		GetVertexShader("postprocess")->SetShader();
+		
+		// extract
+		context->OMSetRenderTargets(1, &bloomExtractRTV, 0);
+		GetPixelShader("bloomExtract")->SetShader();
+		GetPixelShader("bloomExtract")->SetShaderResourceView("Pixels", postProcessSRV);
+		GetPixelShader("bloomExtract")->SetSamplerState("Sampler", GetSampler("default"));
+		GetPixelShader("bloomExtract")->SetFloat("threshold", intensityThreshold);
+		GetPixelShader("kernel")->CopyAllBufferData();
+		// draw to the extract
+		ID3D11Buffer* nothing = 0;
+		context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
+		context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
+		context->Draw(3, 0);
+
+		// blur horizontal
+		context->OMSetRenderTargets(1, &bloomHorizonatalRTV, 0);
+
+
+
+		// blur vertical
+		context->OMSetRenderTargets(1, &bloomExtractRTV, 0); // can resuse this texture
+
+
+
+		// additively blend to back buffer
+		context->OMSetRenderTargets(1, &backBufferRTV, 0);
+
+
 	}
 }
 
@@ -626,6 +667,8 @@ void Renderer::SetUpPostProcessing()
 	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 
 	device->CreateRenderTargetView(ppTexture, &rtvDesc, &postProcessRTV);
+	device->CreateRenderTargetView(ppTexture, &rtvDesc, &bloomExtractRTV);
+	device->CreateRenderTargetView(ppTexture, &rtvDesc, &bloomHorizonatalRTV);
 
 	//Lastly create a Shader Resource View For it.
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -635,6 +678,8 @@ void Renderer::SetUpPostProcessing()
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 
 	device->CreateShaderResourceView(ppTexture, &srvDesc, &postProcessSRV);
+	device->CreateShaderResourceView(ppTexture, &srvDesc, &bloomExtractSRV);
+	device->CreateShaderResourceView(ppTexture, &srvDesc, &bloomHorizonatalSRV);
 
 	// Release the texture because it is now stored on the GPU.
 	ppTexture->Release();
