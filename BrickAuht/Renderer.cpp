@@ -368,37 +368,73 @@ void Renderer::PostProcess()
 	}
 	if (Bloom)
 	{
+		ID3D11RenderTargetView* nullRTV = nullptr;
+		SimplePixelShader* pixelShader;
 		float intensityThreshold = 2.0f;
-		float blurAmount = 2.0f;
+		float dir[2];
 		GetVertexShader("postprocess")->SetShader();
 		
 		// extract
 		context->OMSetRenderTargets(1, &bloomExtractRTV, 0);
-		GetPixelShader("bloomExtract")->SetShader();
-		GetPixelShader("bloomExtract")->SetShaderResourceView("Pixels", postProcessSRV);
-		GetPixelShader("bloomExtract")->SetSamplerState("Sampler", GetSampler("default"));
-		GetPixelShader("bloomExtract")->SetFloat("threshold", intensityThreshold);
-		GetPixelShader("kernel")->CopyAllBufferData();
+		pixelShader = GetPixelShader("bloomExtract");
+		pixelShader->SetShader();
+		pixelShader->SetShaderResourceView("Pixels", 0);
+		pixelShader->SetShaderResourceView("Pixels", postProcessSRV);
+		pixelShader->SetSamplerState("Sampler", GetSampler("default"));
+		pixelShader->SetFloat("threshold", intensityThreshold);
+		pixelShader->CopyAllBufferData();
 		// draw to the extract
 		ID3D11Buffer* nothing = 0;
 		context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
 		context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
 		context->Draw(3, 0);
+		pixelShader->SetShaderResourceView("Pixels", 0);
+		context->OMSetRenderTargets(1, &nullRTV, nullptr);
 
+		
 		// blur horizontal
-		context->OMSetRenderTargets(1, &bloomHorizonatalRTV, 0);
-
-
-
+		dir[0] = 1.0f;
+		dir[1] = 0.0f;
+		context->OMSetRenderTargets(1, &backBufferRTV, 0);
+		pixelShader = GetPixelShader("linearBlur");
+		pixelShader->SetShader();
+		pixelShader->SetShaderResourceView("Pixels", 0);
+		pixelShader->SetShaderResourceView("Pixels", bloomExtractSRV);
+		pixelShader->SetSamplerState("Sampler", GetSampler("default"));
+		pixelShader->SetFloat2("dir", dir);
+		pixelShader->CopyAllBufferData();
+		// draw to the extract
+		context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
+		context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
+		context->Draw(3, 0);
+		pixelShader->SetShaderResourceView("Pixels", 0);
+		context->OMSetRenderTargets(1, &nullRTV, nullptr);
+		/*
 		// blur vertical
+		dir[0] = 0.0f;
+		dir[1] = 1.0f;
 		context->OMSetRenderTargets(1, &bloomExtractRTV, 0); // can resuse this texture
-
-
+		pixelShader->SetShaderResourceView("Pixels", bloomHorizonatalSRV);
+		pixelShader->SetSamplerState("Sampler", GetSampler("default"));
+		pixelShader->SetFloat2("dir", dir);
+		pixelShader->CopyAllBufferData();
+		// draw to the extract
+		context->Draw(3, 0);
+		pixelShader->SetShaderResourceView("Pixels", 0);
 
 		// additively blend to back buffer
+		// bloomExtract now holds the blurred bright pixels
 		context->OMSetRenderTargets(1, &backBufferRTV, 0);
-
-
+		pixelShader = GetPixelShader("bloomCombine");
+		pixelShader->SetShader();
+		pixelShader->SetShaderResourceView("Source", postProcessSRV);
+		pixelShader->SetShaderResourceView("Blurred", bloomExtractSRV);
+		pixelShader->SetSamplerState("Sampler", GetSampler("default"));
+		pixelShader->CopyAllBufferData();
+		context->Draw(3, 0);
+		pixelShader->SetShaderResourceView("Source", 0);
+		pixelShader->SetShaderResourceView("Blurred", 0);
+		*/
 	}
 }
 

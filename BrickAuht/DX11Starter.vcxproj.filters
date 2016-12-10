@@ -235,6 +235,12 @@
     <FxCompile Include="BloomExtractPS.hlsl">
       <Filter>Shaders\PostProcessing</Filter>
     </FxCompile>
+    <FxCompile Include="LinearBlurPS.hlsl">
+      <Filter>Shaders\PostProcessing</Filter>
+    </FxCompile>
+    <FxCompile Include="BloomCombinePS.hlsl">
+      <Filter>Shaders\PostProcessing</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

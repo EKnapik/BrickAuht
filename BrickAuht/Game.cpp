@@ -104,6 +104,10 @@ void Game::LoadShaders()
 	renderer->AddVertexShader("postprocess", L"PostProcessDefaultVS.cso");
 	renderer->AddPixelShader("blur", L"BlurPostProcessPS.cso");
 	renderer->AddPixelShader("kernel", L"KernelPS.cso");
+	renderer->AddPixelShader("bloomExtract", L"BloomExtractPS.cso");
+	renderer->AddPixelShader("linearBlur", L"LinearBlurPS.cso");
+	renderer->AddPixelShader("bloomCombine", L"BloomCombinePS.cso");
+
 }
 
 void Game::LoadMeshes()
