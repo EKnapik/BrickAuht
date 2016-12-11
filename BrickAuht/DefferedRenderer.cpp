@@ -242,9 +242,8 @@ void DefferedRenderer::Render(FLOAT deltaTime, FLOAT totalTime)
 		context->OMSetDepthStencilState(0, 0);
 
 		DrawParticleEmitters(deltaTime, totalTime);
-
-		PostProcess();
 		DrawSkyBox();
+		PostProcess();
 	}
 	else
 	{
