@@ -84,7 +84,7 @@ public:
 	BOOL Bloom = false;
 	BOOL Emboss = false;
 	BOOL BlurWithKernel = false;
-	BOOL Sharpness = true;
+	BOOL Sharpness = false;
 	BOOL BottomSobel = false;
 
 protected:

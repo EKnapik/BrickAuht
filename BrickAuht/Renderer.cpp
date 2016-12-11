@@ -368,11 +368,16 @@ void Renderer::PostProcess()
 	}
 	if (Bloom)
 	{
-		ID3D11RenderTargetView* nullRTV = nullptr;
+		const float black[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+		context->ClearRenderTargetView(bloomExtractRTV, black);
+		context->ClearRenderTargetView(bloomHorizonatalRTV, black);
+
+		ID3D11Buffer* nothing = 0;
 		SimplePixelShader* pixelShader;
 		float intensityThreshold = 2.0f;
 		float dir[2];
 		GetVertexShader("postprocess")->SetShader();
+
 		
 		// extract
 		context->OMSetRenderTargets(1, &bloomExtractRTV, 0);
@@ -384,18 +389,16 @@ void Renderer::PostProcess()
 		pixelShader->SetFloat("threshold", intensityThreshold);
 		pixelShader->CopyAllBufferData();
 		// draw to the extract
-		ID3D11Buffer* nothing = 0;
+		
 		context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
 		context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
 		context->Draw(3, 0);
 		pixelShader->SetShaderResourceView("Pixels", 0);
-		context->OMSetRenderTargets(1, &nullRTV, nullptr);
-
 		
 		// blur horizontal
 		dir[0] = 1.0f;
 		dir[1] = 0.0f;
-		context->OMSetRenderTargets(1, &backBufferRTV, 0);
+		context->OMSetRenderTargets(1, &bloomHorizonatalRTV, 0);
 		pixelShader = GetPixelShader("linearBlur");
 		pixelShader->SetShader();
 		pixelShader->SetShaderResourceView("Pixels", 0);
@@ -408,8 +411,8 @@ void Renderer::PostProcess()
 		context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
 		context->Draw(3, 0);
 		pixelShader->SetShaderResourceView("Pixels", 0);
-		context->OMSetRenderTargets(1, &nullRTV, nullptr);
-		/*
+		context->ClearRenderTargetView(bloomExtractRTV, black);
+
 		// blur vertical
 		dir[0] = 0.0f;
 		dir[1] = 1.0f;
@@ -434,7 +437,6 @@ void Renderer::PostProcess()
 		context->Draw(3, 0);
 		pixelShader->SetShaderResourceView("Source", 0);
 		pixelShader->SetShaderResourceView("Blurred", 0);
-		*/
 	}
 }
 
@@ -693,7 +695,11 @@ void Renderer::SetUpPostProcessing()
 	textureDesc.Usage = D3D11_USAGE_DEFAULT;
 
 	ID3D11Texture2D* ppTexture;
+	ID3D11Texture2D* bloomExtractTexture;
+	ID3D11Texture2D* bloomHorizontalTexture;
 	HRESULT result = device->CreateTexture2D(&textureDesc, 0, &ppTexture);
+	result = device->CreateTexture2D(&textureDesc, 0, &bloomExtractTexture);
+	result = device->CreateTexture2D(&textureDesc, 0, &bloomHorizontalTexture);
 
 	// It is also going to need its own render Target View so we can go 
 	// ahead and set that up too.
@@ -703,8 +709,8 @@ void Renderer::SetUpPostProcessing()
 	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 
 	device->CreateRenderTargetView(ppTexture, &rtvDesc, &postProcessRTV);
-	device->CreateRenderTargetView(ppTexture, &rtvDesc, &bloomExtractRTV);
-	device->CreateRenderTargetView(ppTexture, &rtvDesc, &bloomHorizonatalRTV);
+	device->CreateRenderTargetView(bloomExtractTexture, &rtvDesc, &bloomExtractRTV);
+	device->CreateRenderTargetView(bloomHorizontalTexture, &rtvDesc, &bloomHorizonatalRTV);
 
 	//Lastly create a Shader Resource View For it.
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -714,11 +720,13 @@ void Renderer::SetUpPostProcessing()
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 
 	device->CreateShaderResourceView(ppTexture, &srvDesc, &postProcessSRV);
-	device->CreateShaderResourceView(ppTexture, &srvDesc, &bloomExtractSRV);
-	device->CreateShaderResourceView(ppTexture, &srvDesc, &bloomHorizonatalSRV);
+	device->CreateShaderResourceView(bloomExtractTexture, &srvDesc, &bloomExtractSRV);
+	device->CreateShaderResourceView(bloomHorizontalTexture, &srvDesc, &bloomHorizonatalSRV);
 
 	// Release the texture because it is now stored on the GPU.
 	ppTexture->Release();
+	bloomExtractTexture->Release();
+	bloomHorizontalTexture->Release();
 }
 
 Mesh * Renderer::GetMesh(std::string name)
