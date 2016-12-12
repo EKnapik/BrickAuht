@@ -241,6 +241,9 @@
     <FxCompile Include="BloomCombinePS.hlsl">
       <Filter>Shaders\PostProcessing</Filter>
     </FxCompile>
+    <FxCompile Include="AsciiPS.hlsl">
+      <Filter>Shaders\PostProcessing</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

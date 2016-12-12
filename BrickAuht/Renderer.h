@@ -86,6 +86,7 @@ public:
 	BOOL BlurWithKernel = false;
 	BOOL Sharpness = false;
 	BOOL BottomSobel = false;
+	BOOL ASCII = false;
 
 protected:
 	void SetUpShadows();

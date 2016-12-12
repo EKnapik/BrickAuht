@@ -405,6 +405,8 @@ void Renderer::PostProcess()
 		pixelShader->SetShaderResourceView("Pixels", bloomExtractSRV);
 		pixelShader->SetSamplerState("Sampler", GetSampler("default"));
 		pixelShader->SetFloat2("dir", dir);
+		pixelShader->SetFloat("pixelWidth", 1.0f / width);
+		pixelShader->SetFloat("pixelHeight", 1.0f / height);
 		pixelShader->CopyAllBufferData();
 		// draw to the extract
 		context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
@@ -420,6 +422,8 @@ void Renderer::PostProcess()
 		pixelShader->SetShaderResourceView("Pixels", bloomHorizonatalSRV);
 		pixelShader->SetSamplerState("Sampler", GetSampler("default"));
 		pixelShader->SetFloat2("dir", dir);
+		pixelShader->SetFloat("pixelWidth", 1.0f / width);
+		pixelShader->SetFloat("pixelHeight", 1.0f / height);
 		pixelShader->CopyAllBufferData();
 		// draw to the extract
 		context->Draw(3, 0);
@@ -437,6 +441,32 @@ void Renderer::PostProcess()
 		context->Draw(3, 0);
 		pixelShader->SetShaderResourceView("Source", 0);
 		pixelShader->SetShaderResourceView("Blurred", 0);
+	}
+	if (ASCII)
+	{
+		stride = sizeof(Vertex);
+		UINT offset = 0;
+		Mesh* meshTmp = GetMesh("quad");
+		ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
+		context->OMSetRenderTargets(1, &backBufferRTV, 0);
+		GetVertexShader("postprocess")->SetShader();
+
+		GetPixelShader("ascii")->SetShader();
+		GetPixelShader("ascii")->SetFloat("width", float(width));
+		GetPixelShader("ascii")->SetFloat("height", float(height));
+		GetPixelShader("ascii")->SetFloat("pixelWidth", 1.0f / width);
+		GetPixelShader("ascii")->SetFloat("pixelHeight", 1.0f / height);
+		GetPixelShader("ascii")->SetShaderResourceView("Pixels", postProcessSRV);
+		GetPixelShader("ascii")->SetShaderResourceView("ASCII", GetMaterial("ascii")->GetSRV());
+		GetPixelShader("ascii")->SetSamplerState("Sampler", GetSampler("default"));
+		GetPixelShader("ascii")->CopyAllBufferData();
+		// Now actually draw
+		context->IASetVertexBuffers(0, 1, &vertTemp, &stride, &offset);
+		context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+		context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
+
+		GetPixelShader("ascii")->SetShaderResourceView("Pixels", 0);
+		GetPixelShader("ascii")->SetShaderResourceView("ASCII", 0);
 	}
 }
 

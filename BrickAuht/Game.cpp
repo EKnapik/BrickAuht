@@ -107,7 +107,7 @@ void Game::LoadShaders()
 	renderer->AddPixelShader("bloomExtract", L"BloomExtractPS.cso");
 	renderer->AddPixelShader("linearBlur", L"LinearBlurPS.cso");
 	renderer->AddPixelShader("bloomCombine", L"BloomCombinePS.cso");
-
+	renderer->AddPixelShader("ascii", L"AsciiPS.cso");
 }
 
 void Game::LoadMeshes()
@@ -132,6 +132,7 @@ void Game::LoadMaterials()
 	renderer->GetMaterial("greenopaque")->transparency = true;
 	renderer->AddMaterial("gridclip", L"Assets/Textures/GridClip.png");
 	renderer->AddMaterial("white", L"Assets/Textures/White.png");
+	renderer->AddMaterial("ascii", L"Assets/Textures/asciiTexture.png");
 
 	renderer->AddCubeMaterial("skybox", L"Assets/Textures/SunnyCubeMap.dds");
 }
@@ -208,18 +209,19 @@ void Game::Update(float deltaTime, float totalTime)
 				renderer->BlurWithKernel = false;
 				renderer->Sharpness = false;
 				renderer->BottomSobel = false;
+				renderer->ASCII = false;
 				postProcessChoice = 0;
 			}
 		}
 		O_toggle = currO;
 
 		if (currTab && !prevTab)
-			postProcessChoice = (postProcessChoice + 1) % 7;
+			postProcessChoice = (postProcessChoice + 1) % 8;
 		prevTab = currTab;
 
 		switch (postProcessChoice)
 		{
-		case 0: renderer->BottomSobel = false;
+		case 0: renderer->ASCII = false;
 				renderer->Blur = true;
 				break;
 		case 1: renderer->Blur = false;
@@ -239,6 +241,9 @@ void Game::Update(float deltaTime, float totalTime)
 				break;
 		case 6: renderer->Sharpness = false;
 				renderer->BottomSobel = true;
+				break;
+		case 7: renderer->BottomSobel = false;
+				renderer->ASCII = true;
 				break;
 		}
 	}

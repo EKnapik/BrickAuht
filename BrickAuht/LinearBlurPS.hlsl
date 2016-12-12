@@ -2,6 +2,8 @@
 cbuffer Data : register(b0)
 {
 	float2 dir; // the width of the screen
+	float pixelWidth;
+	float pixelHeight;
 }
 
 
@@ -19,8 +21,8 @@ SamplerState Sampler	: register(s0);
 
 // gaussian weights
 static float weight[] = {
-	0.2270270270f, 0.1945945946f, 0.1216216216f,
-	0.0540540541f, 0.0162162162f
+	0.4270270270f, 0.3445945946f, 0.2216216216f,
+	0.1240540541f, 0.0462162162f
 };
 
 
@@ -28,10 +30,11 @@ static float weight[] = {
 float4 main(VertexToPixel input) : SV_TARGET
 {
 	float4 color = Pixels.Sample(Sampler, input.uv) * weight[0];
+	float2 pixel = float2(pixelWidth, pixelHeight);
 	for (int i = 1; i < 5; i++)
 	{
-		color += Pixels.Sample(Sampler, (input.uv + (dir*i))) * weight[i];
-		color += Pixels.Sample(Sampler, (input.uv - (dir*i))) * weight[i];
+		color += Pixels.Sample(Sampler, (input.uv + (dir*i*pixel))) * weight[i];
+		color += Pixels.Sample(Sampler, (input.uv - (dir*i*pixel))) * weight[i];
 	}
 
 	return color;
