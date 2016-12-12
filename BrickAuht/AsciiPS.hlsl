@@ -38,14 +38,14 @@ float4 main(VertexToPixel input) : SV_TARGET
 			total = total + Pixels.Sample(Sampler, uvNew);
 		}
 	}
-
 	total = total / float(cellWidth * cellHeight);
 
 	float grey = total.x*75. + total.y*155. + total.z*25.;
 	grey = grey / 255.;
 	int choice = grey / .1111111; // this is the choice
 	float2 asciiUV = float2(((choice * 16) + offsetX) / 140.0f, offsetY / 16.0f);
-	return ASCII.Sample(Sampler, asciiUV);
+	return ASCII.Sample(Sampler, asciiUV) * Pixels.Sample(Sampler, input.uv);
+
 	return float4(grey, grey, grey, 1.0);
 }
 
