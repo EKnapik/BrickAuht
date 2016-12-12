@@ -27,7 +27,6 @@ static int cellHeight = 16.0f;
 // Entry point for this pixel shader
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	float2 test = input.uv;
 	float4 total = float4(0.0f, 0.0f, 0.0f, 0.0f);
 	int offsetX = input.position.x % cellWidth;
 	int offsetY = input.position.y % cellHeight;
@@ -44,7 +43,9 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	float grey = total.x*75. + total.y*155. + total.z*25.;
 	grey = grey / 255.;
-	int choice = grey % .1111111; // this is the choice
+	int choice = grey / .1111111; // this is the choice
+	float2 asciiUV = float2(((choice * 16) + offsetX) / 140.0f, offsetY / 16.0f);
+	return ASCII.Sample(Sampler, asciiUV);
 	return float4(grey, grey, grey, 1.0);
 }
 
