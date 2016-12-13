@@ -224,11 +224,11 @@ void DefferedRenderer::Render(FLOAT deltaTime, FLOAT totalTime)
 	context->ClearRenderTargetView(PositionRTV, black);
 	context->ClearRenderTargetView(postProcessRTV, black);
 
-	context->ClearDepthStencilView(
-		depthStencilView,
+	context->ClearDepthStencilView(depthStencilView,
 		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-		1.0f,
-		0);
+		1.0f, 0);
+
+	SortObjects();
 
 	if (PostProcessing)
 	{

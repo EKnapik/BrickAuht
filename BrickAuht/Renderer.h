@@ -1,6 +1,7 @@
 #pragma once
 #include <map>
 #include <DirectXMath.h>
+#include <algorithm>
 #include "SimpleShader.h"
 #include "DXMathImpl.h"
 #include "GameEntity.h"
@@ -89,10 +90,9 @@ public:
 	BOOL ASCII = false;
 
 protected:
+	void SortObjects();
 	void SetUpShadows();
-
 	void SetUpRandomTexture();
-
 	void SetUpPostProcessing();
 
 	std::vector<GameEntity*>* gameEntitys;

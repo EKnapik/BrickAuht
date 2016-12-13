@@ -602,6 +602,19 @@ void Renderer::SetSkyBox(std::string name)
 	skyBox = (CubeMap*)GetMaterial(name);
 }
 
+
+/// Comparison for std::sort
+bool cmd(GameEntity* s1, GameEntity* s2)
+{
+	return s1->GetPosition().z < s2->GetPosition().z;
+}
+
+void Renderer::SortObjects()
+{
+	std::sort(gameEntitys->begin(), gameEntitys->end(), cmd);
+}
+
+
 void Renderer::SetUpShadows()
 {
 	// Get setup for shadows
@@ -783,3 +796,4 @@ SimpleGeometryShader * Renderer::GetGeometryShader(std::string name)
 {
 	return GeometryShaderDictionary.at(name);
 }
+

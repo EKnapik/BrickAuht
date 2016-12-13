@@ -12,6 +12,7 @@ public:
 	MAT4X4* GetView();
 	MAT4X4* GetProjection();
 	VEC3* GetPosition() { return &position; }
+	VEC3* GetDirection() { return &direction; }
 
 	void RotateXY(FLOAT x, FLOAT y);
 
