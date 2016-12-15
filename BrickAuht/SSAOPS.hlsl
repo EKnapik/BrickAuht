@@ -92,6 +92,7 @@ static float3 samples[] = {
 
 float main(VertexToPixel input) : SV_TARGET
 {
+	return 1.0;
 	// tile noise texture over screen based on screen dimensions divided by noise size
 	const float2 noiseScale = float2(width / 100, height / 100);
 
