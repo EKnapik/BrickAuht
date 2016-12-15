@@ -55,7 +55,6 @@ protected:
 	bool spawnFlip;
 	int frameCount;
 	float lastParticleLifetime;
-	bool infinite;
 	
 	SimpleVertexShader* particleVS;
 	SimplePixelShader* particlePS;
