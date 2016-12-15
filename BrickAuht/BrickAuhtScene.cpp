@@ -7,7 +7,7 @@ BrickAuhtScene::BrickAuhtScene()
 	{
 		for (int y = 0; y < 4; y++)
 		{
-			for (int z = 0; z < 2; z++)
+			for (int z = 0; z < 1; z++)
 			{
 				GameEntity* temp;
 				int random = rand() % 5;
@@ -45,20 +45,21 @@ BrickAuhtScene::BrickAuhtScene()
 		}
 	}
 
-	GameEntity* BallEntity = new GameEntity("sphere", "white");
+	GameEntity* BallEntity = new GameEntity("soccer", "basketball");
 	this->ball = new Ball();
 	this->ball->SetEntity(BallEntity);
 	this->ball->kinematics->velocity = VEC3(0, 0, 5);
 	this->ball->kinematics->acceleration = VEC3(0, -2.0f, 0);
 	this->ball->kinematics->SetPosition(VEC3(0, 5.0f, 0));
+	this->ball->entity->SetScale(VEC3(0.25f, 0.25f, 0.25f));
 	GameObjects.push_back(this->ball);
 
-	GameEntity* cubeBox = new GameEntity("court", "white");
-	cubeBox->SetScale(VEC3(2, 2, 2));
-	cubeBox->SetRotation(VEC3(0, PI, 0));
+	GameEntity* cubeBox = new GameEntity("bbcourt", "wood");
+	cubeBox->SetRotation(VEC3(0, 0, 0));
 	court = new GameObject();
 	court->SetEntity(cubeBox);
-	cubeBox->SetPosition(VEC3(0, -1.0f, 0));
+	cubeBox->SetScale(VEC3(0.25f, 0.25f, 0.25f));
+	cubeBox->SetPosition(VEC3(4.5f, -1.0f, 12.0f));
 	GameObjects.push_back(court);
 
 	GameEntity* temp = new GameEntity("cube", "greenopaque");
@@ -67,15 +68,15 @@ BrickAuhtScene::BrickAuhtScene()
 	paddle->kinematics->SetPosition(VEC3(0, 0, -4.5f));
 	GameObjects.push_back(paddle);
 
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < 8; i++)
 	{
 		PointLights.push_back(new ScenePointLight(
 			VEC4(1.0f, 0.2f, 0.2f, 1.0f),
-			VEC3(-4, 5, i * 3), 7.5));
+			VEC3(-4, 1, i * 4), 7.5));
 
 		PointLights.push_back(new ScenePointLight(
 			VEC4(0.2f, 0.2f, 1.0f, 1.0f),
-			VEC3(4, 5, i * 3), 7.5));
+			VEC3(4, 1, i * 3), 7.5));
 	}
 	playerLight = new ScenePointLight(
 		VEC4(1.0f, 0.5f, 0, 1.0f),

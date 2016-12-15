@@ -120,6 +120,9 @@ void Game::LoadMeshes()
 	renderer->AddMesh("torus", "Assets/torus.obj");
 	renderer->AddMesh("court", "Assets/Court.obj");
 	renderer->AddMesh("panel", "Assets/Panel.obj");
+	renderer->AddMesh("golf", "Assets/golfball.obj");
+	renderer->AddMesh("soccer", "Assets/soccerball.obj");
+	renderer->AddMesh("bbcourt", "Assets/bbcourt.obj");
 	// full screen quad mesh
 	renderer->AddMesh("quad", new Mesh(device));
 	//renderer->AddMesh("paddle", "Assets/paddle.obj");
@@ -134,6 +137,10 @@ void Game::LoadMaterials()
 	renderer->AddMaterial("gridclip", L"Assets/Textures/GridClip.png");
 	renderer->AddMaterial("white", L"Assets/Textures/White.png");
 	renderer->AddMaterial("ascii", L"Assets/Textures/asciiTexture.png");
+	renderer->AddMaterial("soccer", L"Assets/Textures/soccer_ball_diffuse.bmp");
+	renderer->AddMaterial("basketball", L"Assets/Textures/basketball texture.jpg");
+	renderer->AddMaterial("wood", L"Assets/Textures/wooden floor texture.jpg");
+
 
 	renderer->AddCubeMaterial("skybox", L"Assets/Textures/SunnyCubeMap.dds");
 }
