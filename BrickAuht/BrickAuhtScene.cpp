@@ -43,26 +43,26 @@ BrickAuhtScene::BrickAuhtScene()
 
 	for (int i = 0; i < 6; i++)
 	{
-		PointLights.push_back(ScenePointLight(
+		PointLights.push_back(new ScenePointLight(
 			VEC4(1.0f, 0.2f, 0.2f, 1.0f),
 			VEC3(-4, 5, i * 3), 7.5));
 
-		PointLights.push_back(ScenePointLight(
+		PointLights.push_back(new ScenePointLight(
 			VEC4(0.2f, 0.2f, 1.0f, 1.0f),
 			VEC3(4, 5, i * 3), 7.5));
 	}
 	playerLight = new ScenePointLight(
-		VEC4(1.0f, 0, 0, 1.0f),
-		VEC3(0, 0, 0), 5.0);
-	PointLights.push_back(*playerLight);
+		VEC4(1.0f, 0.5f, 0, 1.0f),
+		VEC3(0, 0, 0), 6.0);
+	PointLights.push_back(playerLight);
 
 	ballLight = new ScenePointLight(
-		VEC4(0, 1.0f, 0, 1.0f),
-		VEC3(0, 0, 0), 3.0);
-	PointLights.push_back(*ballLight);
+		VEC4(0.1f, 1.0f, 0.1f, 1.0f),
+		VEC3(0, 0, 0), 6.0);
+	PointLights.push_back(ballLight);
 
 	//Big light to light the main court
-	PointLights.push_back(ScenePointLight(
+	PointLights.push_back(new ScenePointLight(
 		VEC4(0.3f, 0.5f, 0.3f, 1.0f),
 		VEC3(0, 10, 20), 20.0f));
 
@@ -197,7 +197,5 @@ void BrickAuhtScene::Update()
 
 BrickAuhtScene::~BrickAuhtScene()
 {
-	delete playerLight;
-	delete ballLight;
 }
 

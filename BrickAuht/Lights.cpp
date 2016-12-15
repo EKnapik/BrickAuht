@@ -14,6 +14,7 @@ SceneDirectionalLight::SceneDirectionalLight(VEC4 aColor, VEC4 dColor, VEC3 dire
 		&VEC4(0, 1, 0, 0));
 }
 
+
 ScenePointLight::ScenePointLight(VEC4 color, VEC3 position, float radius)
 {
 	Color = color;
