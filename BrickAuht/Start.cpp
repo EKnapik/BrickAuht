@@ -36,16 +36,32 @@ Start::Start()
 	GameObjects.push_back(quit);
 
 	ParticleEmitters.push_back(new ParticleEmitter(
-		VEC3(5, 0, 4), VEC3(0.5f, 8.5f, -1.0f), VEC3(0, -5.0f, 0),
-		VEC4(0.1, 0.1f, 1.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
+		VEC3(-6, 0, 4), VEC3(0.0f, 8.5f, -1.0f), VEC3(0, -5.0f, 0),
+		VEC4(1.0f, 0, 0, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
 		0.1f, 2.0f, 3.0f, 1000.0f, 15.0f));
 	ParticleEmitters.push_back(new ParticleEmitter(
-		VEC3(-5, 0, 4), VEC3(-0.5f, 9.5f, -1.0f), VEC3(0, -5.0f, 0),
-		VEC4(0.1, 0.1f, 1.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
+		VEC3(-4, 0, 4), VEC3(0.0f, 8.5f, -1.0f), VEC3(0, -5.0f, 0),
+		VEC4(1.0f, 0.5f, 0.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
+		0.1f, 2.0f, 3.0f, 1000.0f, 15.0f));
+	ParticleEmitters.push_back(new ParticleEmitter(
+		VEC3(-2, 0, 4), VEC3(0.0f, 8.5f, -1.0f), VEC3(0, -5.0f, 0),
+		VEC4(1.0f, 1.0f, 0.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
 		0.1f, 2.0f, 3.0f, 1000.0f, 15.0f));
 	ParticleEmitters.push_back(new ParticleEmitter(
 		VEC3(0, 0, 4), VEC3(0.0f, 8.5f, -1.0f), VEC3(0, -5.0f, 0),
-		VEC4(0.1, 0.1f, 1.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
+		VEC4(0.0f, 1.0f, 0.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
+		0.1f, 2.0f, 3.0f, 1000.0f, 15.0f));
+	ParticleEmitters.push_back(new ParticleEmitter(
+		VEC3(2, 0, 4), VEC3(0.0f, 8.5f, -1.0f), VEC3(0, -5.0f, 0),
+		VEC4(0.0, 0.0f, 1.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
+		0.1f, 2.0f, 3.0f, 1000.0f, 15.0f));
+	ParticleEmitters.push_back(new ParticleEmitter(
+		VEC3(4, 0, 4), VEC3(0.0f, 8.5f, -1.0f), VEC3(0, -5.0f, 0),
+		VEC4(0.25f, 0.0f, 0.5f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
+		0.1f, 2.0f, 3.0f, 1000.0f, 15.0f));
+	ParticleEmitters.push_back(new ParticleEmitter(
+		VEC3(6, 0, 4), VEC3(0.0f, 8.5f, -1.0f), VEC3(0, -5.0f, 0),
+		VEC4(0.95f, 0.9f, 1.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
 		0.1f, 2.0f, 3.0f, 1000.0f, 15.0f));
 
 }

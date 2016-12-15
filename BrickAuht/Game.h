@@ -28,6 +28,19 @@ enum LEVEL_STATE {
 	QUIT
 };
 
+enum POST_PROCESS {
+	BLUR,
+	EDGEDETECT,
+	BLOOM,
+	EMBOSS,
+	BLURK,
+	SHARPNESS,
+	BOTTOMSOBEL,
+	ASCII,
+	NONE,
+	NO_CHANGE
+};
+
 class Game 
 	: public DXCore
 {
@@ -51,6 +64,7 @@ public:
 
 	static Camera* GetCamera();
 	static int levelstate;
+	static int postProcessState;
 private:
 	static Camera* cameraPointer;
 	void SetCamera(Camera* camera) { Game::cameraPointer = camera; }

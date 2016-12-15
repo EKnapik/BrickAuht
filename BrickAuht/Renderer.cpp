@@ -614,6 +614,19 @@ bool backToFront(GameEntity* s1, GameEntity* s2)
 }
 
 
+void Renderer::DisableAllPostProcess()
+{
+	PostProcessing = false;
+	Blur = false;
+	EdgeDetect = false;
+	Bloom = false;
+	Emboss = false;
+	BlurWithKernel = false;
+	Sharpness = false;
+	BottomSobel = false;
+	ASCII = false;
+}
+
 void Renderer::SortObjects()
 {
 	opaque.clear();

@@ -90,6 +90,8 @@ public:
 	BOOL BottomSobel = false;
 	BOOL ASCII = false;
 
+	void DisableAllPostProcess();
+
 protected:
 	void SortObjects();
 	void SetUpShadows();

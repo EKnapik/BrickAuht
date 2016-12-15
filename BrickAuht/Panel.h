@@ -24,6 +24,13 @@ private:
 	Scene* ParentScene;
 };
 
+class PostProcessComponent : public Component {
+public:
+	PostProcessComponent() {};
+	void Update(float dt) {};
+	virtual ~PostProcessComponent() { Game::postProcessState = rand() % POST_PROCESS::NO_CHANGE; };
+};
+
 class StartComponent : public Component {
 public:
 	StartComponent() {};

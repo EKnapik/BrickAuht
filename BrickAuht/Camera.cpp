@@ -5,7 +5,7 @@ using namespace GMath;
 
 Camera::Camera(int width, int height)
 {
-	SetVector3(&position, 0, 0, -10);
+	SetVector3(&position, 0, 1, -10);
 	SetVector3(&direction, 0, 0, 1);
 	xRot = 0;
 	yRot = 0;

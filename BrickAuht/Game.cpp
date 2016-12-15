@@ -12,6 +12,7 @@ using namespace DirectX;
 
 Camera* Game::cameraPointer = nullptr;
 int Game::levelstate = LEVEL_STATE::NO_TRANSITION;
+int Game::postProcessState = POST_PROCESS::NONE;
 
 // --------------------------------------------------------
 // Constructor
@@ -212,6 +213,42 @@ void Game::Update(float deltaTime, float totalTime)
 			break;
 		}
 		Game::levelstate = LEVEL_STATE::NO_TRANSITION;
+	}
+	if (Game::postProcessState != POST_PROCESS::NO_CHANGE)
+	{
+		renderer->DisableAllPostProcess();
+		if (Game::postProcessState != POST_PROCESS::NONE)
+		{
+			renderer->PostProcessing = true;
+			switch (Game::postProcessState)
+			{
+			case POST_PROCESS::ASCII:
+				renderer->ASCII = true;
+				break;
+			case POST_PROCESS::BLOOM:
+				renderer->Bloom = true;
+				break;
+			case POST_PROCESS::BLUR:
+				renderer->Blur = true;
+				break;
+			case POST_PROCESS::BLURK:
+				renderer->BlurWithKernel = true;
+				break;
+			case POST_PROCESS::BOTTOMSOBEL:
+				renderer->BottomSobel = true;
+				break;
+			case POST_PROCESS::EDGEDETECT:
+				renderer->EdgeDetect = true;
+				break;
+			case POST_PROCESS::EMBOSS:
+				renderer->Emboss = true;
+				break;
+			default:
+				renderer->DisableAllPostProcess();
+				break;
+			}
+			Game::postProcessState = POST_PROCESS::NO_CHANGE;
+		}
 	}
 
 	camera->Update(deltaTime);

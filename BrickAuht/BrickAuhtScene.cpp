@@ -42,6 +42,7 @@ BrickAuhtScene::BrickAuhtScene()
 					y * 2,
 					22 - z * 1.25f - 1 / (float)(rand() % 3)));
 				panel->SetWidthHeight(0.5f, 0.5f);
+				panel->AddComponent(new PostProcessComponent());
 				blocks.push_back(panel);
 				GameObjects.push_back(panel);
 			}
@@ -104,16 +105,21 @@ void BrickAuhtScene::Update()
 {
 	playerLight->Position = *Game::GetCamera()->GetPosition();
 
+	if (blocks.size() == 0)
+	{
+		Game::levelstate = LEVEL_STATE::WIN;
+	}
+
 	Shoot();
-	int width = 15;
+	int width = 7.5;
 	int length = 30;
 	for (int b = 0; b < balls.size(); b++)
 	{
-		if (balls.at(b)->kinematics->GetPosition().x < -15)
+		if (balls.at(b)->kinematics->GetPosition().x < -width)
 		{
 			balls.at(b)->kinematics->velocity.x = abs(balls.at(b)->kinematics->velocity.x);
 		}
-		if (balls.at(b)->kinematics->GetPosition().x > 15)
+		if (balls.at(b)->kinematics->GetPosition().x > width)
 		{
 			balls.at(b)->kinematics->velocity.x = -balls.at(b)->kinematics->velocity.x;
 		}
@@ -194,7 +200,7 @@ void BrickAuhtScene::Shoot()
 			Ball* ball = new Ball();
 			ball->SetEntity(BallEntity);
 			ball->kinematics->velocity = *Game::GetCamera()->GetDirection();
-			GMath::VectorScale(&ball->kinematics->velocity, 10);
+			GMath::VectorScale(&ball->kinematics->velocity, 15);
 			ball->kinematics->acceleration = VEC3(0, -2.0f, 0);
 			ball->kinematics->SetPosition(*Game::GetCamera()->GetPosition());
 			ball->entity->SetScale(VEC3(0.1f, 0.1f, 0.1f));
