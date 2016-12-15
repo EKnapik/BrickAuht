@@ -108,6 +108,7 @@ void Game::LoadShaders()
 	renderer->AddPixelShader("linearBlur", L"LinearBlurPS.cso");
 	renderer->AddPixelShader("bloomCombine", L"BloomCombinePS.cso");
 	renderer->AddPixelShader("ascii", L"AsciiPS.cso");
+	renderer->AddPixelShader("ssao", L"SSAOPS.cso");
 }
 
 void Game::LoadMeshes()
@@ -143,6 +144,8 @@ void Game::LoadMaterials()
 
 
 	renderer->AddCubeMaterial("skybox", L"Assets/Textures/SunnyCubeMap.dds");
+	renderer->AddCubeMaterial("japan", L"Assets/Textures/Yokohama.dds");
+	renderer->AddCubeMaterial("bridge", L"Assets/Textures/GoldenGateBridge.dds");
 }
 
 // --------------------------------------------------------

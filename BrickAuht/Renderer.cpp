@@ -103,7 +103,8 @@ Renderer::~Renderer()
 	randomSRV->Release();
 	postProcessSRV->Release();
 	postProcessRTV->Release();
-
+	ssaoRTV->Release();
+	ssaoSRV->Release();
 	bloomExtractRTV->Release();
 	bloomHorizonatalRTV->Release();
 	bloomExtractSRV->Release();
@@ -374,7 +375,7 @@ void Renderer::PostProcess()
 
 		ID3D11Buffer* nothing = 0;
 		SimplePixelShader* pixelShader;
-		float intensityThreshold = 2.0f;
+		float intensityThreshold = 2.5f;
 		float dir[2];
 		GetVertexShader("postprocess")->SetShader();
 
@@ -444,12 +445,10 @@ void Renderer::PostProcess()
 	}
 	if (ASCII)
 	{
-		stride = sizeof(Vertex);
-		UINT offset = 0;
 		Mesh* meshTmp = GetMesh("quad");
 		ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
 		context->OMSetRenderTargets(1, &backBufferRTV, 0);
-		GetVertexShader("postprocess")->SetShader();
+		GetVertexShader("quad")->SetShader();
 
 		GetPixelShader("ascii")->SetShader();
 		GetPixelShader("ascii")->SetFloat("width", float(width));
@@ -736,6 +735,11 @@ void Renderer::SetUpRandomTexture()
 	device->CreateShaderResourceView(randomTexture, &srvDesc, &randomSRV);
 }
 
+FLOAT lerp(FLOAT a, FLOAT b, FLOAT f)
+{
+	return a + f * (b - a);
+}
+
 void Renderer::SetUpPostProcessing()
 {
 	// Post Processing needs a Texture 
@@ -754,9 +758,11 @@ void Renderer::SetUpPostProcessing()
 	textureDesc.Usage = D3D11_USAGE_DEFAULT;
 
 	ID3D11Texture2D* ppTexture;
+	ID3D11Texture2D* ssaoTexture;
 	ID3D11Texture2D* bloomExtractTexture;
 	ID3D11Texture2D* bloomHorizontalTexture;
 	HRESULT result = device->CreateTexture2D(&textureDesc, 0, &ppTexture);
+	result = device->CreateTexture2D(&textureDesc, 0, &ssaoTexture);
 	result = device->CreateTexture2D(&textureDesc, 0, &bloomExtractTexture);
 	result = device->CreateTexture2D(&textureDesc, 0, &bloomHorizontalTexture);
 
@@ -768,6 +774,7 @@ void Renderer::SetUpPostProcessing()
 	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 
 	device->CreateRenderTargetView(ppTexture, &rtvDesc, &postProcessRTV);
+	device->CreateRenderTargetView(ssaoTexture, &rtvDesc, &ssaoRTV);
 	device->CreateRenderTargetView(bloomExtractTexture, &rtvDesc, &bloomExtractRTV);
 	device->CreateRenderTargetView(bloomHorizontalTexture, &rtvDesc, &bloomHorizonatalRTV);
 
@@ -779,13 +786,40 @@ void Renderer::SetUpPostProcessing()
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 
 	device->CreateShaderResourceView(ppTexture, &srvDesc, &postProcessSRV);
+	device->CreateShaderResourceView(ssaoTexture, &srvDesc, &ssaoSRV);
 	device->CreateShaderResourceView(bloomExtractTexture, &srvDesc, &bloomExtractSRV);
 	device->CreateShaderResourceView(bloomHorizontalTexture, &srvDesc, &bloomHorizonatalSRV);
 
 	// Release the texture because it is now stored on the GPU.
 	ppTexture->Release();
+	ssaoTexture->Release();
 	bloomExtractTexture->Release();
 	bloomHorizontalTexture->Release();
+
+
+	// Sample kernel for ssao
+	std::uniform_real_distribution<FLOAT> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
+	std::default_random_engine generator;
+	for (INT i = 0; i < 64; ++i)
+	{
+		VEC3 sample(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, randomFloats(generator));
+
+		VECTOR vec = GMath::GetVector(&sample);
+		vec = GMath::Vec3Normalize(&vec);
+		DirectX::XMStoreFloat3(&sample, vec);
+
+		sample.x *= randomFloats(generator);
+		sample.y *= randomFloats(generator);
+		sample.z *= randomFloats(generator);
+		FLOAT scale = FLOAT(i) / 64.0;
+
+		// Scale samples s.t. they're more aligned to center of kernel
+		scale = lerp(0.1f, 1.0f, scale * scale);
+		sample.x *= scale;
+		sample.y *= scale;
+		sample.z *= scale;
+		ssaoKernel.push_back(sample);
+	}
 }
 
 Mesh * Renderer::GetMesh(std::string name)
