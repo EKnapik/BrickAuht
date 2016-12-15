@@ -30,7 +30,7 @@ void GameManager::Update(float dt)
 	}
 	for (int i = 0; i < activeScene->ParticleEmitters.size(); i++)
 	{
-		if (activeScene->ParticleEmitters.at(i).dead)
+		if (activeScene->ParticleEmitters.at(i)->dead)
 		{
 			activeScene->ParticleEmitters.erase(activeScene->ParticleEmitters.begin() + i);
 			i--;

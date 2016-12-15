@@ -208,9 +208,9 @@ void Renderer::DrawParticleEmitters(FLOAT deltaTime, FLOAT totalTime)
 {
 	for (int i = 0; i < particleEmitters->size(); i++)
 	{
-		if (particleEmitters->at(i).initialized == false)
-			particleEmitters->at(i).Init(this);
-		particleEmitters->at(i).Draw(this, deltaTime, totalTime);
+		if (particleEmitters->at(i)->initialized == false)
+			particleEmitters->at(i)->Init(this);
+		particleEmitters->at(i)->Draw(this, deltaTime, totalTime);
 	}
 }
 
