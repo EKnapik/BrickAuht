@@ -241,8 +241,8 @@ void DefferedRenderer::Render(FLOAT deltaTime, FLOAT totalTime)
 		context->OMSetRenderTargets(1, &postProcessRTV, depthStencilView);
 		context->OMSetDepthStencilState(0, 0);
 
-		DrawParticleEmitters(deltaTime, totalTime);
 		DrawSkyBox();
+		DrawParticleEmitters(deltaTime, totalTime);
 		PostProcess();
 	}
 	else
@@ -275,7 +275,6 @@ void DefferedRenderer::gBufferRender(FLOAT deltaTime, FLOAT totalTime)
 	// RENDER NORMALLY NOW
 	DrawMultipleMaterials();
 }
-
 
 
 /// Only Render Sphere Lights
@@ -336,7 +335,6 @@ void DefferedRenderer::pointLightRender()
 	context->RSSetState(0);
 	return;
 }
-
 
 void DefferedRenderer::directionalLightRender() {
 	float factors[4] = { 1,1,1,1 };

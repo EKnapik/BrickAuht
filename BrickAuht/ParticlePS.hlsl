@@ -16,6 +16,5 @@ SamplerState trilinear		: register(s0);
 float4 main(GStoPS input) : SV_TARGET
 {
 	//return input.color;
-
 	return particleTexture.Sample(trilinear, input.uv) * input.color;
 }

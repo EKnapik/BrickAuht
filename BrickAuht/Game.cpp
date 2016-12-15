@@ -279,18 +279,6 @@ void Game::Draw(float deltaTime, float totalTime)
 {
 	renderer->RenderShadowMap();
 	renderer->Render(deltaTime, totalTime);
-	//renderer->DrawOneMaterial(&gameManager.GameEntities,  deltaTime, totalTime);
-	//renderer->DrawMultipleMaterials(&gameManager.GameEntities, deltaTime, totalTime);
-	//renderer->DrawMultipleMaterials(&gameManager.GameEntities, &gameManager.GetDirectionalLights(), &gameManager.GetPointLights(), deltaTime, totalTime);
-	//renderer->DrawSkyBox();
-
-	/*context->ClearDepthStencilView(
-		depthStencilView,
-		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-		1.0f,
-		0);
-	
-	emitter->Draw(context, camera, deltaTime, totalTime);*/
 	
 	swapChain->Present(0, 0);
 }

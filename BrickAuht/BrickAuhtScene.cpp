@@ -62,16 +62,16 @@ BrickAuhtScene::BrickAuhtScene()
 	PointLights.push_back(*ballLight);
 
 	//Big light to light the main court
-	/*PointLights.push_back(ScenePointLight(
+	PointLights.push_back(ScenePointLight(
 		VEC4(0.3f, 0.5f, 0.3f, 1.0f),
-		VEC3(0, 10, 20), 20.0f));*/
+		VEC3(0, 10, 20), 20.0f));
 
 	DirectionalLights.push_back(SceneDirectionalLight(
 		VEC4(0.1f, 0.1f, 0.1f, 1.0f),
 		VEC4(1.0f, 1.0f, 1.0f, 1.0f),
 		VEC3(0, 5, -10)));
 
-	//ParticleEmitters.push_back(ParticleEmitter("particle", "default"));
+	ParticleEmitters.push_back(ParticleEmitter("particle", "default"));
 }
 
 void BrickAuhtScene::Initialize()
