@@ -47,6 +47,12 @@ DXCore::DXCore(
 	this->height = windowHeight;
 	this->titleBarStats = debugTitleBarStats;
 
+	// FORCE FULL SCREEN
+	RECT desktopRect;
+	GetClientRect(GetDesktopWindow(), &desktopRect);
+	this->width = desktopRect.right;
+	this->height = desktopRect.bottom;
+
 	// Initialize fields
 	fpsFrameCount = 0;
 	fpsTimeElapsed = 0.0f;

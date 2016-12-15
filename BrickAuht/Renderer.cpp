@@ -42,13 +42,15 @@ FLOAT defaultKernel[] = {
 0, 0, 0
 };
 
-Renderer::Renderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* device, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView)
+Renderer::Renderer(Camera *camera, ID3D11DeviceContext *context, ID3D11Device* device, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView, int width, int height)
 {
 	this->camera = camera;
 	this->device = device;
 	this->context = context;
 	this->backBufferRTV = backBufferRTV;
 	this->depthStencilView = depthStencilView;
+	this->width = width;
+	this->height = height;
 
 	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -758,8 +760,8 @@ void Renderer::SetUpPostProcessing()
 	// Post Processing needs a Texture 
 	D3D11_TEXTURE2D_DESC textureDesc = {};
 	// TODO: We still don't pass in width and height
-	textureDesc.Width = 1280;
-	textureDesc.Height = 720;
+	textureDesc.Width = width;
+	textureDesc.Height = height;
 	textureDesc.ArraySize = 1;
 	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 	textureDesc.CPUAccessFlags = 0;
