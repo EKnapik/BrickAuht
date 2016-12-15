@@ -238,17 +238,16 @@ void DefferedRenderer::Render(FLOAT deltaTime, FLOAT totalTime)
 	context->ClearRenderTargetView(NormalRTV, black);
 	context->ClearRenderTargetView(PositionRTV, black);
 	context->ClearRenderTargetView(postProcessRTV, black);
-
 	context->ClearDepthStencilView(depthStencilView,
 		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
 		1.0f, 0);
 
 	SortObjects();
 
+	gBufferRender(deltaTime, totalTime);
+
 	if (PostProcessing)
 	{
-		gBufferRender(deltaTime, totalTime);
-
 		context->OMSetRenderTargets(1, &postProcessRTV, 0);
 		pointLightRender();
 		directionalLightRender();
@@ -262,8 +261,6 @@ void DefferedRenderer::Render(FLOAT deltaTime, FLOAT totalTime)
 	}
 	else
 	{
-		gBufferRender(deltaTime, totalTime);
-
 		context->OMSetRenderTargets(1, &backBufferRTV, 0);
 		pointLightRender();
 		directionalLightRender();
@@ -290,6 +287,7 @@ void DefferedRenderer::gBufferRender(FLOAT deltaTime, FLOAT totalTime)
 	// RENDER NORMALLY NOW
 	DrawOpaqueMaterials();
 	DrawTransparentMaterials();
+	DrawSSAO();
 }
 
 
@@ -366,6 +364,7 @@ void DefferedRenderer::directionalLightRender() {
 	pixelShader->SetShaderResourceView("gAlbedo", AlbedoSRV);
 	pixelShader->SetShaderResourceView("gNormal", NormalSRV);
 	pixelShader->SetShaderResourceView("gPosition", PositionSRV);
+	pixelShader->SetShaderResourceView("ssao", ssaoSRV);
 
 	pixelShader->SetFloat3("cameraPosition", *camera->GetPosition());
 	vertexShader->CopyAllBufferData();
@@ -392,6 +391,7 @@ void DefferedRenderer::directionalLightRender() {
 	pixelShader->SetShaderResourceView("gAlbedo", 0);
 	pixelShader->SetShaderResourceView("gNormal", 0);
 	pixelShader->SetShaderResourceView("gPosition", 0);
+	pixelShader->SetShaderResourceView("ssao", 0);
 	context->OMSetBlendState(0, factors, 0xFFFFFFFF);
 	return;
 }
@@ -495,5 +495,39 @@ void DefferedRenderer::DrawTransparentMaterials()
 	context->OMSetBlendState(0, factors, 0xFFFFFFFF);
 }
 
+
+void DefferedRenderer::DrawSSAO()
+{
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	Mesh* meshTmp = GetMesh("quad");
+	ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
+
+	const float white[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	context->ClearRenderTargetView(ssaoRTV, white);
+
+	context->OMSetRenderTargets(1, &ssaoRTV, 0);
+	GetVertexShader("quad")->SetShader();
+
+	GetPixelShader("ssao")->SetShader();
+	GetPixelShader("ssao")->SetMatrix4x4("view", *camera->GetView());
+	GetPixelShader("ssao")->SetMatrix4x4("projection", *camera->GetProjection());
+	GetPixelShader("ssao")->SetFloat("width", float(width));
+	GetPixelShader("ssao")->SetFloat("height", float(height));
+
+	GetPixelShader("ssao")->SetShaderResourceView("texNoise", postProcessSRV);
+	GetPixelShader("ssao")->SetShaderResourceView("gNormal", NormalSRV);
+	GetPixelShader("ssao")->SetShaderResourceView("gPosition", PositionSRV);
+	GetPixelShader("ssao")->SetSamplerState("Sampler", GetSampler("default"));
+	GetPixelShader("ssao")->CopyAllBufferData();
+	// Now actually draw
+	context->IASetVertexBuffers(0, 1, &vertTemp, &stride, &offset);
+	context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
+
+	GetPixelShader("ssao")->SetShaderResourceView("texNoise", 0);
+	GetPixelShader("ssao")->SetShaderResourceView("gNormal", 0);
+	GetPixelShader("ssao")->SetShaderResourceView("gPosition", 0);
+}
 
 

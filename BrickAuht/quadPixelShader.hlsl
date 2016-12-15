@@ -3,6 +3,7 @@
 Texture2D gAlbedo			: register(t0);
 Texture2D gNormal			: register(t1);
 Texture2D gPosition			: register(t2);
+Texture2D ssao				: register(t3);
 SamplerState basicSampler	: register(s0);
 
 
@@ -35,6 +36,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	// need to unpack normal
 	float3 normal = (gNormal.Sample(basicSampler, input.uv).xyz * 2.0f) - 1.0f;
 	float4 surfaceColor = gAlbedo.Sample(basicSampler, input.uv);
+	float ssaoAmount = ssao.Sample(basicSampler, input.uv).r;
 
 	// Check for clip
 	// CLIPPING MIGHT NOT BE THE BEST CHOICE BUT IT IS A CHOICE
@@ -49,5 +51,5 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 refl = reflect(-dirToLight, normal);
 	float spec = pow(max(dot(refl, toCamera), 0), 200);
 
-	return (dirLight.AmbientColor) + (dirLight.DiffuseColor * dirLightAmount * surfaceColor) + spec;
+	return (dirLight.AmbientColor*ssaoAmount) + (dirLight.DiffuseColor * dirLightAmount * surfaceColor) + spec;
 }

@@ -78,6 +78,7 @@ void Start::Update()
 			grow = true;
 		}
 	}
+
 	for (int b = 0; b < balls.size(); b++)
 	{
 		if (balls.at(b)->kinematics->GetPosition().y < 0.0f)

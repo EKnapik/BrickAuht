@@ -262,6 +262,9 @@
     <FxCompile Include="AsciiPS.hlsl">
       <Filter>Shaders\PostProcessing</Filter>
     </FxCompile>
+    <FxCompile Include="SSAOPS.hlsl">
+      <Filter>Shaders\PostProcessing</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

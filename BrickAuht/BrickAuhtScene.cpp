@@ -105,9 +105,25 @@ void BrickAuhtScene::Update()
 	playerLight->Position = *Game::GetCamera()->GetPosition();
 
 	Shoot();
-
+	int width = 15;
+	int length = 30;
 	for (int b = 0; b < balls.size(); b++)
 	{
+		if (balls.at(b)->kinematics->GetPosition().x < -15)
+		{
+			balls.at(b)->kinematics->velocity.x = abs(balls.at(b)->kinematics->velocity.x);
+		}
+		if (balls.at(b)->kinematics->GetPosition().x > 15)
+		{
+			balls.at(b)->kinematics->velocity.x = -balls.at(b)->kinematics->velocity.x;
+		}
+		if (balls.at(b)->kinematics->GetPosition().z > length)
+		{
+			MarkForDelete(balls.at(b));
+			balls.erase(balls.begin() + b);
+			b--;
+			continue;
+		}
 		if (balls.at(b)->kinematics->GetPosition().y < 0.0f)
 		{
 			balls.at(b)->kinematics->velocity.y = abs(balls.at(b)->kinematics->velocity.y);

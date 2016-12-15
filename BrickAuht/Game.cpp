@@ -75,7 +75,7 @@ void Game::Init()
 	light.Direction = VEC3(1, -1, 0);
 
 	gameManager.SetActiveScene(new Start());
-	renderer->SetSkyBox("skybox");
+	renderer->SetSkyBox("japan");
 }
 
 // --------------------------------------------------------
@@ -114,6 +114,7 @@ void Game::LoadShaders()
 	renderer->AddPixelShader("linearBlur", L"LinearBlurPS.cso");
 	renderer->AddPixelShader("bloomCombine", L"BloomCombinePS.cso");
 	renderer->AddPixelShader("ascii", L"AsciiPS.cso");
+	renderer->AddPixelShader("ssao", L"SSAOPS.cso");
 }
 
 void Game::LoadMeshes()
@@ -154,7 +155,8 @@ void Game::LoadMaterials()
 	renderer->AddMaterial("play", L"Assets/Textures/Play.png");
 
 	renderer->AddCubeMaterial("skybox", L"Assets/Textures/SunnyCubeMap.dds");
-	//renderer->AddCubeMaterial("stmy", L"Assets/Textures/stromytest.png");
+	renderer->AddCubeMaterial("japan", L"Assets/Textures/Yokohama.dds");
+	renderer->AddCubeMaterial("bridge", L"Assets/Textures/GoldenGateBridge.dds");
 }
 
 // --------------------------------------------------------
@@ -193,11 +195,13 @@ void Game::Update(float deltaTime, float totalTime)
 			break;
 		case LEVEL_STATE::WIN:
 			gameManager.SetActiveScene(new Win());
+			renderer->SetSkyBox("bridge");
 			break;
 		case LEVEL_STATE::START:
 			gameManager.SetActiveScene(new Start());
 			break;
 		case LEVEL_STATE::MAIN:
+			renderer->SetSkyBox("japan");
 			gameManager.SetActiveScene(new BrickAuhtScene());
 			break;
 		case LEVEL_STATE::QUIT:

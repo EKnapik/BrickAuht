@@ -18,6 +18,7 @@ private:
 	void directionalLightRender();
 	void DrawOpaqueMaterials();
 	void DrawTransparentMaterials();
+	void DrawSSAO();
 
 	// Albedo
 	ID3D11RenderTargetView *	AlbedoRTV;
