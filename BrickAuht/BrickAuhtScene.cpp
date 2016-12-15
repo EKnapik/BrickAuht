@@ -8,8 +8,9 @@ BrickAuhtScene::BrickAuhtScene()
 	{
 		for (int y = 0; y < 4; y++)
 		{
-			for (int z = 0; z < 8; z++)
+			for (int z = 0; z < 4; z++)
 			{
+				blockCount++;
 				GameEntity* temp;
 				int random = rand() % 5;
 				switch (random)
@@ -38,9 +39,9 @@ BrickAuhtScene::BrickAuhtScene()
 				temp->SetRotation(VEC3(PI / 2, 0, 0));
 				Panel* panel = new Panel();
 				panel->SetEntity(temp);
-				panel->entity->SetPosition(VEC3(-5 + x * 2 + 3.0f / (float)(rand() % (int)(z + 1)), 
+				panel->entity->SetPosition(VEC3(-5 + x * 2 + 3.0f / ((float)(rand() % (int)(z + 1)) + 1.0f), 
 					y * 2,
-					22 - z * 1.25f - 1 / (float)(rand() % 3)));
+					22 - z * 1.25f - 1 / ((float)(rand() % 3) + 1.0f)));
 				panel->SetWidthHeight(0.5f, 0.5f);
 				panel->AddComponent(new PostProcessComponent());
 				blocks.push_back(panel);
@@ -105,7 +106,7 @@ void BrickAuhtScene::Update()
 {
 	playerLight->Position = *Game::GetCamera()->GetPosition();
 
-	if (blocks.size() == 0)
+	if (blockCount == 0)
 	{
 		Game::levelstate = LEVEL_STATE::WIN;
 	}
@@ -154,7 +155,8 @@ void BrickAuhtScene::Update()
 				GMath::VectorScale(&bounce, 3.0f);
 				GMath::AddVec3(&balls.at(b)->kinematics->velocity, &balls.at(b)->kinematics->velocity, &bounce);
 				MarkForDelete(blocks.at(p));
-				blocks.erase(blocks.begin() + p);
+ 				blocks.erase(blocks.begin() + p);
+				blockCount--;
 				p--;
 			}
 		}

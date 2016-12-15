@@ -21,6 +21,7 @@ public:
 	~BrickAuhtScene();
 
 private:
+	int blockCount = 0;
 	bool spacePressed = false;
 	int ammo = 10;
 
