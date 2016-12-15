@@ -197,6 +197,12 @@ void BrickAuhtScene::Update()
 			GMath::GetMagnitude(&velocityMag, &ball->kinematics->velocity);
 			GMath::SetVector3(&ball->kinematics->velocity, distanceVec.x, distanceVec.y, distanceVec.z);
 			GMath::VectorScale(&ball->kinematics->velocity, velocityMag);
+			// spawn particle emitter
+			ParticleEmitters.push_back(ParticleEmitter(
+				ball->kinematics->GetPosition(), VEC3(0.0f, 3.0f, 0), VEC3(0, -2.0f, 0),
+				VEC4(0.1, 0.1f, 1.0f, 0.2f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
+				0.1f, 2.0f, 3.0f, 2.0f, 5.0f));
+			//
 			MarkForDelete(blocks.at(p));
 			blocks.erase(blocks.begin() + p);
 			p--;
