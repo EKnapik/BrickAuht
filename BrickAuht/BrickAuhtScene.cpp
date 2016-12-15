@@ -7,37 +7,41 @@ BrickAuhtScene::BrickAuhtScene()
 	{
 		for (int y = 0; y < 4; y++)
 		{
-			GameEntity* temp;
-			int random = rand() % 5;
-			switch (random)
+			for (int z = 0; z < 2; z++)
 			{
-			case 0:
-				temp = new GameEntity("panel", "electricity");
-				break;
-			case 1:
-				temp = new GameEntity("panel", "greenopaque");
-				break;
-			case 2:
-				temp = new GameEntity("panel", "gridclip");
-				break;
-			case 3:
-				temp = new GameEntity("panel", "white");
-				break;
-			case 4:
-				temp = new GameEntity("panel", "ascii");
-				break;
-			default:
-				temp = new GameEntity("panel", "default");
-				break;
+				GameEntity* temp;
+				int random = rand() % 5;
+				switch (random)
+				{
+				case 0:
+					temp = new GameEntity("panel", "electricity");
+					break;
+				case 1:
+					temp = new GameEntity("panel", "greenopaque");
+					break;
+				case 2:
+					temp = new GameEntity("panel", "gridclip");
+					break;
+				case 3:
+					temp = new GameEntity("panel", "white");
+					break;
+				case 4:
+					temp = new GameEntity("panel", "ascii");
+					break;
+				default:
+					temp = new GameEntity("panel", "default");
+					break;
+				}
+
+				temp->SetScale(VEC3(0.15f, 0.15f, 0.15f));
+				temp->SetRotation(VEC3(PI / 2, 0, 0));
+				Panel* panel = new Panel();
+				panel->SetEntity(temp);
+				panel->entity->SetPosition(VEC3((x * 2) - 5.5f + (z * 0.5), (y * 2) + z * 0.5f, 20 + z * 0.25f));
+				panel->SetWidthHeight(0.5f, 0.5f);
+				blocks.push_back(panel);
+				GameObjects.push_back(panel);
 			}
-			
-			temp->SetScale(VEC3(0.15f, 0.15f, 0.15f));
-			temp->SetRotation(VEC3(PI / 2, 0, 0));
-			Panel* panel = new Panel();
-			panel->SetEntity(temp);
-			panel->entity->SetPosition(VEC3((x * 2) - 5.0f, (y * 2), 20));
-			blocks.push_back(panel);
-			GameObjects.push_back(panel);
 		}
 	}
 
@@ -196,19 +200,19 @@ void BrickAuhtScene::Update()
 			GMath::GetMagnitude(&velocityMag, &ball->kinematics->velocity);
 			GMath::SetVector3(&ball->kinematics->velocity, distanceVec.x, distanceVec.y, distanceVec.z);
 			GMath::VectorScale(&ball->kinematics->velocity, velocityMag);
-			// spawn particle emitter
-			ParticleEmitters.push_back(new ParticleEmitter(
-				ball->kinematics->GetPosition(), VEC3(0.5f, 0.0f, -1.0f), VEC3(0, -2.0f, 0),
-				VEC4(0.1, 0.1f, 1.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
-				0.1f, 2.0f, 3.0f, 1.0f, 8.0f));
-			ParticleEmitters.push_back(new ParticleEmitter(
-				ball->kinematics->GetPosition(), VEC3(-0.5f, 0.0f, -1.0f), VEC3(0, -2.0f, 0),
-				VEC4(0.1, 0.1f, 1.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
-				0.1f, 2.0f, 3.0f, 1.0f, 8.0f));
-			ParticleEmitters.push_back(new ParticleEmitter(
-				ball->kinematics->GetPosition(), VEC3(0.0f, 0.5f, -1.0f), VEC3(0, -2.0f, 0),
-				VEC4(0.1, 0.1f, 1.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
-				0.1f, 2.0f, 3.0f, 1.0f, 8.0f));
+			//// spawn particle emitter
+			//ParticleEmitters.push_back(new ParticleEmitter(
+			//	ball->kinematics->GetPosition(), VEC3(0.5f, 0.0f, -1.0f), VEC3(0, -2.0f, 0),
+			//	VEC4(0.1, 0.1f, 1.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
+			//	0.1f, 2.0f, 3.0f, 1.0f, 8.0f));
+			//ParticleEmitters.push_back(new ParticleEmitter(
+			//	ball->kinematics->GetPosition(), VEC3(-0.5f, 0.0f, -1.0f), VEC3(0, -2.0f, 0),
+			//	VEC4(0.1, 0.1f, 1.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
+			//	0.1f, 2.0f, 3.0f, 1.0f, 8.0f));
+			//ParticleEmitters.push_back(new ParticleEmitter(
+			//	ball->kinematics->GetPosition(), VEC3(0.0f, 0.5f, -1.0f), VEC3(0, -2.0f, 0),
+			//	VEC4(0.1, 0.1f, 1.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
+			//	0.1f, 2.0f, 3.0f, 1.0f, 8.0f));
 			//
 			MarkForDelete(blocks.at(p));
 			blocks.erase(blocks.begin() + p);
