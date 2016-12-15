@@ -7,6 +7,8 @@
 class Panel : public GameObject {
 public:
 	Panel();
+	float width = 1, height = 1;
+	void SetWidthHeight(float width, float height) { this->width = width; this->height = height; };
 };
 
 class ParticleComponent : public Component {
