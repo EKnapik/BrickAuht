@@ -16,7 +16,8 @@ private:
 	void gBufferRender(FLOAT deltaTime, FLOAT totalTime);
 	void pointLightRender();
 	void directionalLightRender();
-	void DrawMultipleMaterials();
+	void DrawOpaqueMaterials();
+	void DrawTransparentMaterials();
 
 	// Albedo
 	ID3D11RenderTargetView *	AlbedoRTV;
@@ -33,6 +34,7 @@ private:
 	ID3D11SamplerState* simpleSampler;
 	ID3D11BlendState* blendState;
 	ID3D11RasterizerState* lightRastState;
+	ID3D11BlendState* transBlendState;
 
 	float windowWidth;
 	float windowHeight;

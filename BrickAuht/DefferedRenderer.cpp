@@ -188,6 +188,20 @@ DefferedRenderer::DefferedRenderer(Camera *camera, ID3D11DeviceContext *context,
 	ligtRastDesc.CullMode = D3D11_CULL_FRONT;
 	ligtRastDesc.DepthClipEnable = false;
 	device->CreateRasterizerState(&ligtRastDesc, &lightRastState);
+
+	D3D11_BLEND_DESC transBlend = {};
+	transBlend.AlphaToCoverageEnable = false;
+	transBlend.IndependentBlendEnable = false;
+	transBlend.RenderTarget[0].BlendEnable = true;
+	transBlend.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	transBlend.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	transBlend.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	transBlend.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	transBlend.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	transBlend.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	transBlend.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	device->CreateBlendState(&transBlend, &transBlendState);
 }
 
 
@@ -208,6 +222,7 @@ DefferedRenderer::~DefferedRenderer()
 	simpleSampler->Release();
 	blendState->Release();
 	lightRastState->Release();
+	transBlendState->Release();
 }
 
 
@@ -273,7 +288,8 @@ void DefferedRenderer::gBufferRender(FLOAT deltaTime, FLOAT totalTime)
 		throw "Scene needs at least 1 directional light";
 
 	// RENDER NORMALLY NOW
-	DrawMultipleMaterials();
+	DrawOpaqueMaterials();
+	DrawTransparentMaterials();
 }
 
 
@@ -380,28 +396,12 @@ void DefferedRenderer::directionalLightRender() {
 	return;
 }
 
-void DefferedRenderer::DrawMultipleMaterials()
+void DefferedRenderer::DrawOpaqueMaterials()
 {
+	if (opaque.size() == 0) return;
+
 	SimpleVertexShader* vertexShader = GetVertexShader("gBuffer");
 	SimplePixelShader* pixelShader = GetPixelShader("gBuffer");
-
-	if (gameEntitys->size() == 0) return;
-	float factors[4] = { 1,1,1,1 };
-
-	D3D11_BLEND_DESC bd = {};
-	bd.AlphaToCoverageEnable = false;
-	bd.IndependentBlendEnable = false;
-	bd.RenderTarget[0].BlendEnable = true;
-	bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-	bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-	bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-	bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-	ID3D11BlendState* transBlendState;
-	device->CreateBlendState(&bd, &transBlendState);
 
 	//Do shadow stuff!
 	SceneDirectionalLight* firstDirectionalLight = &directionalLights->at(0);
@@ -410,21 +410,11 @@ void DefferedRenderer::DrawMultipleMaterials()
 	pixelShader->SetShaderResourceView("ShadowMap", shadowSRV);
 	pixelShader->SetSamplerState("ShadowSampler", GetSampler("shadow"));
 
-	for (int i = 0; i < gameEntitys->size(); i++)
+	for (int i = 0; i < opaque.size(); i++)
 	{
-		Material* material = GetMaterial(gameEntitys->at(i)->GetMaterial());
+		Material* material = GetMaterial(opaque.at(i)->GetMaterial());
 		vertexShader->SetShader();
 		pixelShader->SetShader();
-
-		if (material->transparency == true)
-		{	
-			context->OMSetBlendState(transBlendState, factors, 0xFFFFFFFF);
-			blendMode = true;
-		} else if (blendMode == true)
-		{
-			context->OMSetBlendState(0, factors, 0xFFFFFFFF);
-			blendMode = false;
-		}
 
 		// Send texture Info
 		pixelShader->SetSamplerState("basicSampler", material->GetSamplerState());
@@ -440,20 +430,69 @@ void DefferedRenderer::DrawMultipleMaterials()
 		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
 		Mesh* meshTmp;
-		vertexShader->SetMatrix4x4("world", *gameEntitys->at(i)->GetWorld());
+		vertexShader->SetMatrix4x4("world", *opaque.at(i)->GetWorld());
 		vertexShader->CopyAllBufferData();
 		pixelShader->CopyAllBufferData();
 
-		meshTmp = GetMesh(gameEntitys->at(i)->GetMesh());
+		meshTmp = GetMesh(opaque.at(i)->GetMesh());
+		ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
+		context->IASetVertexBuffers(0, 1, &vertTemp, &stride, &offset);
+		context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+		context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
+	}
+	
+	context->RSSetState(0);
+}
+
+void DefferedRenderer::DrawTransparentMaterials()
+{
+	if (transparent.size() == 0) return;
+
+	float factors[4] = { 1,1,1,1 };
+	context->OMSetBlendState(transBlendState, factors, 0xFFFFFFFF);
+
+	SimpleVertexShader* vertexShader = GetVertexShader("gBuffer");
+	SimplePixelShader* pixelShader = GetPixelShader("gBuffer");
+
+	//Do shadow stuff!
+	SceneDirectionalLight* firstDirectionalLight = &directionalLights->at(0);
+	vertexShader->SetMatrix4x4("shadowView", firstDirectionalLight->ViewMatrix);
+	vertexShader->SetMatrix4x4("shadowProjection", shadowDirectionalProjectionMatrix);
+	pixelShader->SetShaderResourceView("ShadowMap", shadowSRV);
+	pixelShader->SetSamplerState("ShadowSampler", GetSampler("shadow"));
+
+	for (int i = 0; i < transparent.size(); i++)
+	{
+		Material* material = GetMaterial(transparent.at(i)->GetMaterial());
+		vertexShader->SetShader();
+		pixelShader->SetShader();
+
+		// Send texture Info
+		pixelShader->SetSamplerState("basicSampler", material->GetSamplerState());
+		pixelShader->SetShaderResourceView("diffuseTexture", material->GetSRV());
+		//pixelShader->SetShaderResourceView("NormalMap", material->GetSRV());
+
+		// Send Geometry
+		vertexShader->SetMatrix4x4("view", *camera->GetView());
+		vertexShader->SetMatrix4x4("projection", *camera->GetProjection());
+		pixelShader->SetFloat3("cameraPosition", *camera->GetPosition());
+		pixelShader->SetShaderResourceView("Sky", skyBox->GetSRV());
+
+		UINT stride = sizeof(Vertex);
+		UINT offset = 0;
+		Mesh* meshTmp;
+		vertexShader->SetMatrix4x4("world", *transparent.at(i)->GetWorld());
+		vertexShader->CopyAllBufferData();
+		pixelShader->CopyAllBufferData();
+
+		meshTmp = GetMesh(transparent.at(i)->GetMesh());
 		ID3D11Buffer* vertTemp = meshTmp->GetVertexBuffer();
 		context->IASetVertexBuffers(0, 1, &vertTemp, &stride, &offset);
 		context->IASetIndexBuffer(meshTmp->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 		context->DrawIndexed(meshTmp->GetIndexCount(), 0, 0);
 	}
 
-	transBlendState->Release();
 	context->OMSetBlendState(0, factors, 0xFFFFFFFF);
-	context->RSSetState(0);
 }
 
 

@@ -604,20 +604,30 @@ void Renderer::SetSkyBox(std::string name)
 
 
 /// Comparison for std::sort
-bool cmd(GameEntity* s1, GameEntity* s2)
+bool frontToBack(GameEntity* s1, GameEntity* s2)
 {
 	return s1->GetPosition().z < s2->GetPosition().z;
 }
 
+bool backToFront(GameEntity* s1, GameEntity* s2)
+{
+	return s1->GetPosition().z > s2->GetPosition().z;
+}
+
+
 void Renderer::SortObjects()
 {
-	//opaque.empty();
-	//transparent.empty();
-	//for (int i = 0; i < gameEntitys->size(); i++)
-	//{
-	//	if (GetMaterial(gameEntitys->at(i)->GetMaterial())->transparency)
-	//}
-	std::sort(gameEntitys->begin(), gameEntitys->end(), cmd);
+	opaque.clear();
+	transparent.clear();
+	for (int i = 0; i < gameEntitys->size(); i++)
+	{
+		if (GetMaterial(gameEntitys->at(i)->GetMaterial())->transparency)
+			transparent.push_back(gameEntitys->at(i));
+		else
+			opaque.push_back(gameEntitys->at(i));
+	}
+	std::sort(opaque.begin(), opaque.end(), frontToBack);
+	std::sort(transparent.begin(), transparent.end(), backToFront);
 }
 
 
