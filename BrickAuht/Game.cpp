@@ -3,10 +3,15 @@
 #include "WICTextureLoader.h"
 #include "BouncingBallScene.h"
 #include "BrickAuhtScene.h"
+#include "Start.h"
 #include "DefferedRenderer.h"
+#include "Win.h"
 
 // For the DirectX Math library
 using namespace DirectX;
+
+Camera* Game::cameraPointer = nullptr;
+int Game::levelstate = LEVEL_STATE::NO_TRANSITION;
 
 // --------------------------------------------------------
 // Constructor
@@ -51,6 +56,7 @@ Game::~Game()
 void Game::Init()
 {
 	camera = new Camera(width, height);
+	Game::SetCamera(camera);
 	// TODO: Renderer should only take the context and then create the buffers it needs
 	renderer = new DefferedRenderer(camera, context, device, backBufferRTV, depthStencilView, width, height);
 	// renderer = new Renderer(camera, context, device, backBufferRTV, depthStencilView);
@@ -68,7 +74,7 @@ void Game::Init()
 	light.DiffuseColor = VEC4(0, 0, 1, 1);
 	light.Direction = VEC3(1, -1, 0);
 
-	gameManager.SetActiveScene(new BrickAuhtScene());
+	gameManager.SetActiveScene(new Start());
 	renderer->SetSkyBox("skybox");
 }
 
@@ -118,11 +124,12 @@ void Game::LoadMeshes()
 	renderer->AddMesh("helix", "Assets/helix.obj");
 	renderer->AddMesh("sphere", "Assets/sphere.obj");
 	renderer->AddMesh("torus", "Assets/torus.obj");
-	renderer->AddMesh("court", "Assets/Court.obj");
+	//renderer->AddMesh("court", "Assets/Court.obj");
 	renderer->AddMesh("panel", "Assets/Panel.obj");
-	renderer->AddMesh("golf", "Assets/golfball.obj");
+	//renderer->AddMesh("golf", "Assets/golfball.obj");
 	renderer->AddMesh("soccer", "Assets/soccerball.obj");
 	renderer->AddMesh("bbcourt", "Assets/bbcourt.obj");
+	//renderer->AddMesh("bat", "Assets/baseballbat.obj");
 	// full screen quad mesh
 	renderer->AddMesh("quad", new Mesh(device));
 	//renderer->AddMesh("paddle", "Assets/paddle.obj");
@@ -137,12 +144,17 @@ void Game::LoadMaterials()
 	renderer->AddMaterial("gridclip", L"Assets/Textures/GridClip.png");
 	renderer->AddMaterial("white", L"Assets/Textures/White.png");
 	renderer->AddMaterial("ascii", L"Assets/Textures/asciiTexture.png");
-	renderer->AddMaterial("soccer", L"Assets/Textures/soccer_ball_diffuse.bmp");
+	//renderer->AddMaterial("soccer", L"Assets/Textures/soccer_ball_diffuse.bmp");
 	renderer->AddMaterial("basketball", L"Assets/Textures/basketball texture.jpg");
 	renderer->AddMaterial("wood", L"Assets/Textures/wooden floor texture.jpg");
-
+	//renderer->AddMaterial("bat", L"Assets/Textures/bat.jpg");
+	//renderer->AddMaterial("batnormal", L"Assets/Textures/batnormal.JPG");
+	renderer->AddMaterial("win", L"Assets/Textures/Win.png");
+	renderer->AddMaterial("quit", L"Assets/Textures/Quit.png");
+	renderer->AddMaterial("play", L"Assets/Textures/Play.png");
 
 	renderer->AddCubeMaterial("skybox", L"Assets/Textures/SunnyCubeMap.dds");
+	//renderer->AddCubeMaterial("stmy", L"Assets/Textures/stromytest.png");
 }
 
 // --------------------------------------------------------
@@ -171,6 +183,32 @@ void Game::Update(float deltaTime, float totalTime)
 	// Quit if the escape key is pressed
 	if (GetAsyncKeyState(VK_ESCAPE))
 		Quit();
+
+	if (Game::levelstate != LEVEL_STATE::NO_TRANSITION)
+	{
+		switch (Game::levelstate)
+		{
+		case LEVEL_STATE::LOSE:
+			//gameManager.SetActiveScene();
+			break;
+		case LEVEL_STATE::WIN:
+			gameManager.SetActiveScene(new Win());
+			break;
+		case LEVEL_STATE::START:
+			gameManager.SetActiveScene(new Start());
+			break;
+		case LEVEL_STATE::MAIN:
+			gameManager.SetActiveScene(new BrickAuhtScene());
+			break;
+		case LEVEL_STATE::QUIT:
+			Quit();
+			break;
+		default:
+			gameManager.SetActiveScene(new Start());
+			break;
+		}
+		Game::levelstate = LEVEL_STATE::NO_TRANSITION;
+	}
 
 	camera->Update(deltaTime);
 
@@ -346,5 +384,12 @@ void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 void Game::OnMouseWheel(float wheelDelta, int x, int y)
 {
 	// Add any code here...
+}
+Camera * Game::GetCamera()
+{
+	if (cameraPointer == nullptr)
+		return nullptr;
+	else
+		return cameraPointer;
 }
 #pragma endregion

@@ -19,6 +19,15 @@
 
 #include "ParticleEmitter.h"
 
+enum LEVEL_STATE {
+	NO_TRANSITION,
+	START,
+	MAIN,
+	WIN,
+	LOSE,
+	QUIT
+};
+
 class Game 
 	: public DXCore
 {
@@ -39,7 +48,12 @@ public:
 	void OnMouseUp	 (WPARAM buttonState, int x, int y);
 	void OnMouseMove (WPARAM buttonState, int x, int y);
 	void OnMouseWheel(float wheelDelta,   int x, int y);
+
+	static Camera* GetCamera();
+	static int levelstate;
 private:
+	static Camera* cameraPointer;
+	void SetCamera(Camera* camera) { Game::cameraPointer = camera; }
 	Camera* camera;
 	bool mouseDown = false;
 

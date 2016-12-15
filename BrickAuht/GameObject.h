@@ -4,6 +4,7 @@
 class Component {
 public:
 	virtual void Update(float dt) = 0;
+	virtual ~Component() {};
 };
 
 class GameObject {

@@ -120,6 +120,11 @@ namespace GMath
 		SetVector3(vec, 0, 0, 0);
 	};
 
+	inline void StoreVector(VEC3* location, VECTOR* vec)
+	{
+		DirectX::XMStoreFloat3(location, *vec);
+	}
+
 	inline VECTOR AddVector(VECTOR* vec1, VECTOR* vec2)
 	{
 		return DirectX::XMVectorAdd(*vec1, *vec2);

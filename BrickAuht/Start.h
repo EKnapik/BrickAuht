@@ -6,23 +6,20 @@
 #include "Mesh.h"
 #include "Panel.h"
 
-class BrickAuhtScene : public Scene {
+class Start : public Scene {
 public:
-	BrickAuhtScene();
+	Start();
 	void Initialize();
 	void Update();
 	std::vector<Panel*> blocks;
-	std::vector<ScenePointLight*> crazyLights;
 	std::vector<Ball*> balls;
-	GameObject* court;
-	ScenePointLight* playerLight;
-	ScenePointLight* ballLight;
+	ScenePointLight* pointLight;
+	bool grow = true;
 
-	~BrickAuhtScene();
+	~Start();
 
 private:
 	bool spacePressed = false;
-	int ammo = 10;
 
 	void Shoot();
 };

@@ -1,4 +1,5 @@
 #pragma once
+#pragma once
 
 #include "Scene.h"
 #include "Ball.h"
@@ -6,9 +7,9 @@
 #include "Mesh.h"
 #include "Panel.h"
 
-class BrickAuhtScene : public Scene {
+class Win : public Scene {
 public:
-	BrickAuhtScene();
+	Win();
 	void Initialize();
 	void Update();
 	std::vector<Panel*> blocks;
@@ -18,11 +19,10 @@ public:
 	ScenePointLight* playerLight;
 	ScenePointLight* ballLight;
 
-	~BrickAuhtScene();
+	~Win();
 
 private:
 	bool spacePressed = false;
-	int ammo = 10;
 
 	void Shoot();
 };

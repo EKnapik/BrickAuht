@@ -108,6 +108,12 @@
     <ClCompile Include="Panel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Start.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Win.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BouncingBallScene.h">
@@ -167,9 +173,6 @@
     <ClInclude Include="Mesh.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Ball.h">
-      <Filter>Header Files\Engine\Objects</Filter>
-    </ClInclude>
     <ClInclude Include="DefferedRenderer.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
@@ -178,6 +181,15 @@
     </ClInclude>
     <ClInclude Include="Panel.h">
       <Filter>Header Files\Engine\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Ball.h">
+      <Filter>Header Files\Engine\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Start.h">
+      <Filter>Header Files\Engine\Scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="Win.h">
+      <Filter>Header Files\Engine\Scenes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
