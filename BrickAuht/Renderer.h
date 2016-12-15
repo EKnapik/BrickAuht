@@ -75,7 +75,7 @@ public:
 
 	void SetGameEntities(std::vector<GameEntity*>* gameEntitys) { this->gameEntitys = gameEntitys; }
 	void SetDirectionalLights(std::vector<SceneDirectionalLight>* directionalLights) { this->directionalLights = directionalLights; }
-	void SetPointLights(std::vector<ScenePointLight>* pointLights) { this->pointLights = pointLights; }
+	void SetPointLights(std::vector<ScenePointLight*>* pointLights) { this->pointLights = pointLights; }
 	void SetParticleEmitters(std::vector<ParticleEmitter*>* particleEmitters) { this->particleEmitters = particleEmitters; }
 
 	// This section is the Post Process Boolean section.
@@ -97,7 +97,7 @@ protected:
 
 	std::vector<GameEntity*>* gameEntitys;
 	std::vector<SceneDirectionalLight>* directionalLights;
-	std::vector<ScenePointLight>* pointLights;
+	std::vector<ScenePointLight*>* pointLights;
 	std::vector<ParticleEmitter*>* particleEmitters;
 
 	ID3D11RenderTargetView* backBufferRTV;

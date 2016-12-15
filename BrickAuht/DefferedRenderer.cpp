@@ -228,7 +228,7 @@ void DefferedRenderer::Render(FLOAT deltaTime, FLOAT totalTime)
 		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
 		1.0f, 0);
 
-	SortObjects();
+	//SortObjects();
 
 	if (PostProcessing)
 	{
@@ -311,12 +311,12 @@ void DefferedRenderer::pointLightRender()
 
 	for (int i = 0; i < pointLights->size(); i++) {
 		// Send light info to pixel shader
-		light.Color = pointLights->at(i).Color;
-		light.Position = pointLights->at(i).Position;
-		light.Radius = pointLights->at(i).Radius.x;
+		light.Color = pointLights->at(i)->Color;
+		light.Position = pointLights->at(i)->Position;
+		light.Radius = pointLights->at(i)->Radius.x;
 		pixelShader->SetData("pointLight", &light, sizeof(PointLight));
 
-		GMath::SetTransposeMatrix(&world, &(GMath::CreateScaleMatrix(&pointLights->at(i).Radius) * GMath::CreateTranslationMatrix(&pointLights->at(i).Position)));
+		GMath::SetTransposeMatrix(&world, &(GMath::CreateScaleMatrix(&pointLights->at(i)->Radius) * GMath::CreateTranslationMatrix(&pointLights->at(i)->Position)));
 		vertexShader->SetMatrix4x4("world", world);
 
 		pixelShader->CopyAllBufferData();
