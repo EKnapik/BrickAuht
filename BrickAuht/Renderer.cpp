@@ -611,6 +611,12 @@ bool cmd(GameEntity* s1, GameEntity* s2)
 
 void Renderer::SortObjects()
 {
+	//opaque.empty();
+	//transparent.empty();
+	//for (int i = 0; i < gameEntitys->size(); i++)
+	//{
+	//	if (GetMaterial(gameEntitys->at(i)->GetMaterial())->transparency)
+	//}
 	std::sort(gameEntitys->begin(), gameEntitys->end(), cmd);
 }
 

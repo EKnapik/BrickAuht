@@ -96,6 +96,8 @@ protected:
 	void SetUpPostProcessing();
 
 	std::vector<GameEntity*>* gameEntitys;
+	std::vector<GameEntity*> opaque;
+	std::vector<GameEntity*> transparent;
 	std::vector<SceneDirectionalLight>* directionalLights;
 	std::vector<ScenePointLight*>* pointLights;
 	std::vector<ParticleEmitter*>* particleEmitters;
