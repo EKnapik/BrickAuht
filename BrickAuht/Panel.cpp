@@ -9,7 +9,10 @@ ParticleComponent::ParticleComponent(GameObject * parentObject, Scene * parentSc
 	ParentObject = parentObject;
 	ParentScene = parentScene;
 
-	emitter = new ParticleEmitter("particle", "default");
+	emitter = new ParticleEmitter(ParticleEmitter("particle", "default",
+		VEC3(2.0f, 0, 0), VEC3(-2.0f, 2.0f, 0), VEC3(0, -1.0f, 0),
+		VEC4(1, 0.1f, 0.1f, 0.2f), VEC4(1, 1, 0.1f, 0.1f), VEC4(1, 0.6f, 0.1f, 0),
+		0.1f, 5.0f, 5.0f, 3.0f, 5.0f));
 
 	ParentScene->ParticleEmitters.push_back(emitter);
 }

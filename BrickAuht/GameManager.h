@@ -21,7 +21,7 @@ public:
 
 	std::vector<SceneDirectionalLight>* GetDirectionalLights() { return &activeScene->DirectionalLights; }
 	std::vector<ScenePointLight>* GetPointLights() { return &activeScene->PointLights; }
-	std::vector<ParticleEmitter>* GetParticleEmitters() { return &activeScene->ParticleEmitters; }
+	std::vector<ParticleEmitter*>* GetParticleEmitters() { return &activeScene->ParticleEmitters; }
 
 	GameManager();
 

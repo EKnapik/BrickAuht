@@ -147,6 +147,7 @@ void ParticleEmitter::Draw(Renderer* renderer, float deltaTime, float totalTime)
 void ParticleEmitter::DrawParticles(Renderer* renderer, float deltaTime, float totalTime)
 {
 	MAT4X4 worldMatrix;
+	SetIdentity4X4(&worldMatrix);
 	SetTransposeMatrix(&worldMatrix, &(CreateScaleMatrix(&VEC3(1,1,1)) * CreateRotationMatrix(&VEC3(0,0,0)) * CreateTranslationMatrix(&Position)));
 	particleGS->SetMatrix4x4("world", worldMatrix);
 	particleGS->SetMatrix4x4("view", *renderer->camera->GetView());
