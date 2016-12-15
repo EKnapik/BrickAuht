@@ -514,7 +514,6 @@ void DefferedRenderer::DrawSSAO()
 	GetPixelShader("ssao")->SetMatrix4x4("projection", *camera->GetProjection());
 	GetPixelShader("ssao")->SetFloat("width", float(width));
 	GetPixelShader("ssao")->SetFloat("height", float(height));
-	GetPixelShader("ssao")->SetData("samples", &ssaoKernel, 1020);
 
 	GetPixelShader("ssao")->SetShaderResourceView("texNoise", postProcessSRV);
 	GetPixelShader("ssao")->SetShaderResourceView("gNormal", NormalSRV);
