@@ -70,29 +70,6 @@ BrickAuhtScene::BrickAuhtScene()
 		VEC4(0.1f, 0.1f, 0.1f, 1.0f),
 		VEC4(1.0f, 1.0f, 1.0f, 1.0f),
 		VEC3(0, 5, -10)));
-
-	ParticleEmitters.push_back(new ParticleEmitter("particle", "default",
-		VEC3(2.0f, 0, 0), VEC3(-2.0f, 2.0f, 0), VEC3(0, -1.0f, 0),
-		VEC4(1, 0.1f, 0.1f, 0.2f), VEC4(1, 1, 0.1f, 0.1f), VEC4(1, 0.6f, 0.1f, 0),
-		0.1f, 5.0f, 5.0f, 3000.0f, 5.0f));
-	/*
-	// Particle setup
-	particleStartPosition = VEC3(2.0f, 0, 0);
-	particleStartVelocity = VEC3(-2.0f, 2.0f, 0);
-	particleConstantAccel = VEC3(0, -1.0f, 0);
-	particleStartColor = VEC4(1, 0.1f, 0.1f, 0.2f);
-	particleMidColor = VEC4(1, 1, 0.1f, 0.1f);
-	particleEndColor = VEC4(1, 0.6f, 0.1f, 0);
-	particleStartSize = 0.1f;
-	particleMidSize = 5.0f;
-	particleEndSize = 5.0f;
-
-	particleAgeToSpawn = 0.00001f;
-	particleMaxLifetime = 5.0f;
-	
-	particleAgeToSpawn = -emitterLifetime;
-	lastParticleLifetime = 3.0f * emitterLifetime;
-	*/
 }
 
 void BrickAuhtScene::Initialize()
@@ -198,10 +175,18 @@ void BrickAuhtScene::Update()
 			GMath::SetVector3(&ball->kinematics->velocity, distanceVec.x, distanceVec.y, distanceVec.z);
 			GMath::VectorScale(&ball->kinematics->velocity, velocityMag);
 			// spawn particle emitter
-			ParticleEmitters.push_back(ParticleEmitter(
-				ball->kinematics->GetPosition(), VEC3(0.0f, 3.0f, 0), VEC3(0, -2.0f, 0),
-				VEC4(0.1, 0.1f, 1.0f, 0.2f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
-				0.1f, 2.0f, 3.0f, 2.0f, 5.0f));
+			ParticleEmitters.push_back(new ParticleEmitter(
+				ball->kinematics->GetPosition(), VEC3(0.5f, 0.0f, -1.0f), VEC3(0, -2.0f, 0),
+				VEC4(0.1, 0.1f, 1.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
+				0.1f, 2.0f, 3.0f, 1.0f, 8.0f));
+			ParticleEmitters.push_back(new ParticleEmitter(
+				ball->kinematics->GetPosition(), VEC3(-0.5f, 0.0f, -1.0f), VEC3(0, -2.0f, 0),
+				VEC4(0.1, 0.1f, 1.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
+				0.1f, 2.0f, 3.0f, 1.0f, 8.0f));
+			ParticleEmitters.push_back(new ParticleEmitter(
+				ball->kinematics->GetPosition(), VEC3(0.0f, 0.5f, -1.0f), VEC3(0, -2.0f, 0),
+				VEC4(0.1, 0.1f, 1.0f, 0.4f), VEC4(0.1, 1, 1.0f, 0.1f), VEC4(0, 0.6f, 1.0f, 0),
+				0.1f, 2.0f, 3.0f, 1.0f, 8.0f));
 			//
 			MarkForDelete(blocks.at(p));
 			blocks.erase(blocks.begin() + p);
