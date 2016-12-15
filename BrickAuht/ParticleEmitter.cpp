@@ -35,20 +35,6 @@ void ParticleEmitter::Init(Renderer * renderer)
 	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	renderer->device->CreateDepthStencilState(&depthDesc, &particleDepthState);
 
-	// Particle setup
-	particleStartPosition = VEC3(2.0f, 0, 0);
-	particleStartVelocity = VEC3(-2.0f, 2.0f, 0);
-	particleStartColor = VEC4(1, 0.1f, 0.1f, 0.2f);
-	particleMidColor = VEC4(1, 1, 0.1f, 0.1f);
-	particleEndColor = VEC4(1, 0.6f, 0.1f, 0);
-	particleStartSize = 0.1f;
-	particleMidSize = 5.0f;
-	particleEndSize = 5.0f;
-
-	particleAgeToSpawn = 0.00001f;
-	particleMaxLifetime = 5.0f;
-	particleConstantAccel = VEC3(0, -1.0f, 0);
-
 	// Particle geometry
 	// Set up the vertices we want to put into the Vertex Buffer
 	ParticleVertex vertices[1];
@@ -85,11 +71,51 @@ void ParticleEmitter::Init(Renderer * renderer)
 	initialized = true;
 }
 
-ParticleEmitter::ParticleEmitter(std::string particleVS, std::string texture)
+/// If a negative emitter lifetime is given the emitter will last forever
+ParticleEmitter::ParticleEmitter(std::string particleVS, std::string texture,
+			VEC3 startPos, VEC3 startVelocity, VEC3 acceleration,
+			VEC4 startColor, VEC4 midColor, VEC4 endColor,
+			float startSize, float midSize, float endSize,
+			float emitterLifetime, float particleLifetime)
 {
 	this->ParticleVS = particleVS;
 	this->Texture = texture;
-	initialized = false;
+	particleStartPosition = startPos;
+	particleStartVelocity = startVelocity;
+	particleConstantAccel = acceleration;
+	particleStartColor = startColor;
+	particleMidColor = midColor;
+	particleEndColor = endColor;
+	particleStartSize = startSize;
+	particleMidSize = midSize;
+	particleEndSize = endSize;
+
+	particleAgeToSpawn = -emitterLifetime;
+	particleMaxLifetime = particleLifetime;
+	lastParticleLifetime = particleMaxLifetime * emitterLifetime;
+}
+
+/// If a negative emitter lifetime is given the emitter will last forever
+ParticleEmitter::ParticleEmitter(VEC3 startPos, VEC3 startVelocity, VEC3 acceleration,
+			VEC4 startColor, VEC4 midColor, VEC4 endColor,
+			float startSize, float midSize, float endSize,
+			float emitterLifetime, float particleLifetime)
+{
+	this->ParticleVS = "particle";
+	this->Texture = "default";
+	particleStartPosition = startPos;
+	particleStartVelocity = startVelocity;
+	particleConstantAccel = acceleration;
+	particleStartColor = startColor;
+	particleMidColor = midColor;
+	particleEndColor = endColor;
+	particleStartSize = startSize;
+	particleMidSize = midSize;
+	particleEndSize = endSize;
+
+	particleAgeToSpawn = -emitterLifetime;
+	particleMaxLifetime = particleLifetime;
+	lastParticleLifetime = particleMaxLifetime * emitterLifetime;
 }
 
 ParticleEmitter::~ParticleEmitter()
@@ -106,11 +132,16 @@ ParticleEmitter::~ParticleEmitter()
 
 void ParticleEmitter::Draw(Renderer* renderer, float deltaTime, float totalTime)
 {
+	if (lastParticleLifetime < 0)
+		dead = true;
+
 	// Spawn particles
 	DrawSpawn(renderer, deltaTime, totalTime);
-
 	// Draw particles ----------------------------------------------------
 	DrawParticles(renderer, deltaTime, totalTime);
+
+	particleAgeToSpawn += deltaTime;
+	lastParticleLifetime -= deltaTime;
 }
 
 void ParticleEmitter::DrawParticles(Renderer* renderer, float deltaTime, float totalTime)

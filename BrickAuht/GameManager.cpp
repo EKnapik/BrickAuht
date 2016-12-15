@@ -28,6 +28,15 @@ void GameManager::Update(float dt)
 			GameEntities.push_back(GameObjects->at(i)->entity);
 		}
 	}
+	for (int i = 0; i < activeScene->ParticleEmitters.size(); i++)
+	{
+		if (activeScene->ParticleEmitters.at(i).dead)
+		{
+			activeScene->ParticleEmitters.erase(activeScene->ParticleEmitters.begin() + i);
+			i--;
+		}
+	}
+
 	if (activeScene)
 	{
 		activeScene->Update();

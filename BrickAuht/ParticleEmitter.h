@@ -22,15 +22,23 @@ class ParticleEmitter {
 public:
 	void Init(Renderer* renderer);
 
-	ParticleEmitter(
-		std::string particleVS,
-		std::string texture);
+	ParticleEmitter(std::string particleVS, std::string texture,
+		VEC3 startPos, VEC3 startVelocity, VEC3 acceleration,
+		VEC4 startColor, VEC4 midColor, VEC4 endColor,
+		float startSize, float midSize, float endSize,
+		float emitterLifetime, float particleLifetime);
+
+	ParticleEmitter(VEC3 startPos, VEC3 startVelocity, VEC3 acceleration,
+		VEC4 startColor, VEC4 midColor, VEC4 endColor,
+		float startSize, float midSize, float endSize,
+		float emitterLifetime, float particleLifetime);
 
 	virtual ~ParticleEmitter();
 
 	void Draw(Renderer* renderer, float deltaTime, float totalTime);
 
 	bool initialized = false;
+	bool dead = false;
 
 	VEC3 Position;
 
@@ -48,7 +56,8 @@ protected:
 	ID3D11Buffer* soBufferWrite;
 	bool spawnFlip;
 	int frameCount;
-
+	float lastParticleLifetime;
+	
 	SimpleVertexShader* particleVS;
 	SimplePixelShader* particlePS;
 	SimpleGeometryShader* particleGS;
