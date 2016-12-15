@@ -3,19 +3,41 @@
 
 BrickAuhtScene::BrickAuhtScene()
 {
-	for (int x = 0; x < 5; x++)
+	for (int x = 0; x < 6; x++)
 	{
-		for (int y = 0; y < 5; y++)
+		for (int y = 0; y < 4; y++)
 		{
-			GameEntity* temp = new GameEntity("cube", "default");
-
-			Ball* ball = new Ball();
-			ball->SetEntity(temp);
-			ball->kinematics->velocity = VEC3(0, 0, 0);
-			ball->kinematics->acceleration = VEC3(0, 0, 0);
-			ball->kinematics->SetPosition(VEC3(x - 2.5f, y, 20));
-			blocks.push_back(ball);
-			GameObjects.push_back(ball);
+			GameEntity* temp;
+			int random = rand() % 5;
+			switch (random)
+			{
+			case 0:
+				temp = new GameEntity("panel", "electricity");
+				break;
+			case 1:
+				temp = new GameEntity("panel", "greenopaque");
+				break;
+			case 2:
+				temp = new GameEntity("panel", "gridclip");
+				break;
+			case 3:
+				temp = new GameEntity("panel", "white");
+				break;
+			case 4:
+				temp = new GameEntity("panel", "ascii");
+				break;
+			default:
+				temp = new GameEntity("panel", "default");
+				break;
+			}
+			
+			temp->SetScale(VEC3(0.15f, 0.15f, 0.15f));
+			temp->SetRotation(VEC3(PI / 2, 0, 0));
+			Panel* panel = new Panel();
+			panel->SetEntity(temp);
+			panel->entity->SetPosition(VEC3((x * 2) - 5.0f, (y * 2), 20));
+			blocks.push_back(panel);
+			GameObjects.push_back(panel);
 		}
 	}
 
@@ -162,12 +184,12 @@ void BrickAuhtScene::Update()
 	{
 		VEC3 distanceVec;
 		GMath::AddVec3(&distanceVec, &ball->kinematics->GetPosition(),
-			(GMath::VectorScale(&GMath::GetVector(&blocks.at(p)->kinematics->GetPosition()), -1.0f)));
+			(GMath::VectorScale(&GMath::GetVector(&blocks.at(p)->entity->GetPosition()), -1.0f)));
 
 		FLOAT distance;
 		GMath::GetMagnitude(&distance, &distanceVec);
 
-		if (distance < ball->radius + blocks.at(p)->radius)
+		if (distance < ball->radius + blocks.at(p)->width)
 		{
 			GMath::Vec3Normalize(&GMath::GetVector(&distanceVec));
 			float velocityMag;

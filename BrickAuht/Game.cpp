@@ -119,6 +119,7 @@ void Game::LoadMeshes()
 	renderer->AddMesh("sphere", "Assets/sphere.obj");
 	renderer->AddMesh("torus", "Assets/torus.obj");
 	renderer->AddMesh("court", "Assets/Court.obj");
+	renderer->AddMesh("panel", "Assets/Panel.obj");
 	// full screen quad mesh
 	renderer->AddMesh("quad", new Mesh(device));
 	//renderer->AddMesh("paddle", "Assets/paddle.obj");
