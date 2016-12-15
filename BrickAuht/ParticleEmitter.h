@@ -32,6 +32,8 @@ public:
 
 	bool initialized = false;
 
+	VEC3 Position;
+
 protected:
 	virtual void DrawParticles(Renderer* renderer, float deltaTime, float totalTime);
 	void SwapSOBuffers();
